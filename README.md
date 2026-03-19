@@ -73,7 +73,7 @@ Then in Claude Code:
 | Command | Pipeline |
 |---------|----------|
 | `/cgx:review <phase>` | Review + test + verify. Flags: `--test-only`, `--simplify`, `--coverage`, `--e2e` |
-| `/cgx:ui <phase>` | GSD UI-SPEC → CK ui-ux-pro-max → build → GSD ui-review |
+| `/cgx:ui <phase>` | Design spec → build → 6-pillar audit. Flags: `--from-image`, `--audit`, `--optimize` |
 
 ### Knowledge
 | Command | Pipeline |

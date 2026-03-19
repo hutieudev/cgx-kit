@@ -54,7 +54,7 @@ CGX_COMMANDS="$HOME/.claude/commands/cgx"
 CK_SKILLS="$HOME/.claude/skills"
 GSD_DIR="$HOME/.claude/get-shit-done"
 GSD_COMMANDS="$HOME/.claude/commands/gsd"
-CGX_VERSION="0.8.0"
+CGX_VERSION="0.8.1"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Uninstall
@@ -332,7 +332,7 @@ QUICK
 
 QUALITY
   /cgx:review <phase>   Review + test + simplify (--test-only, --simplify)
-  /cgx:ui <phase>       UI design + build + audit
+  /cgx:ui <phase>       UI design + build + 6-pillar audit (--from-image, --audit, --optimize)
 
 KNOWLEDGE
   /cgx:docs [action]    Documentation sync
@@ -843,42 +843,122 @@ CMD_EOF
 cat > "$CGX_COMMANDS/ui.md" << 'CMD_EOF'
 ---
 name: cgx:ui
-description: UI phase — design spec + build + audit
-argument-hint: "<phase-number>"
+description: UI phase — design + build + audit with full frontend intelligence
+argument-hint: "<phase-number|file-path> [--from-image <path>] [--audit] [--optimize]"
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
 ---
 <objective>
-UI development with design-first approach. CGX stays in control.
+Full frontend pipeline with design intelligence. CGX stays in control.
+Modes: design+build (default), clone from image, audit existing, optimize.
 </objective>
-<context>Phase: $ARGUMENTS</context>
+<context>$ARGUMENTS</context>
 <process>
 ## GUIDED PIPELINE
 
-### Step 1: Design Spec
+### Step 0: Detect Mode
+- Default (phase number): full design → build → audit
+- --from-image <path>: clone UI from screenshot/design
+- --audit: audit existing UI code only
+- --optimize: performance optimization only
+
+### Step 1: Design Spec (skip if --audit or --optimize)
+
+**If --from-image:**
+- Read the image file using Read tool
+- Analyze: layout structure, colors, typography, spacing, components
+- Generate UI-SPEC.md from image analysis
+- Ask user to confirm/adjust via AskUserQuestion
+
+**Default:**
 - Read phase plan from .planning/
-- Ask user about design preferences (style, colors, layout) via AskUserQuestion
-- Write UI-SPEC.md in .planning/phase-N/
+- Ask user via AskUserQuestion:
+  - Design style? (options: minimalist, glassmorphism, brutalism, bento grid, neumorphism, flat, material)
+  - Color palette? (options: monochrome, ocean, sunset, forest, neon, pastel, custom)
+  - Component library? (detect from package.json: shadcn/ui, MUI, Tailwind, vanilla CSS)
+  - Font pairing preference? (modern, classic, playful, technical)
+  - Dark mode support? (yes/no/both)
+  - Mobile-first? (yes/no)
 
-### Step 2: Build
-- Implement UI components using Edit/Write tools
-- Follow UI-SPEC.md specifications
-- Run dev server check via Bash
+- Write UI-SPEC.md to .planning/phase-N/:
+  ```
+  # UI-SPEC: Phase N
+  Style: <chosen>
+  Palette: <colors with hex>
+  Components: <library>
+  Fonts: <primary> + <secondary>
+  Breakpoints: mobile 640px, tablet 768px, desktop 1024px
+  Dark mode: <yes/no>
+  ```
 
-### Step 3: Audit
-- Spawn code-reviewer Agent focused on UI quality
-- Check accessibility, responsive, performance
+### Step 2: Build (skip if --audit or --optimize)
+- Scan existing components: Glob for *.tsx, *.vue, *.svelte in src/
+- Implement components following UI-SPEC.md:
+  - Use correct component library syntax (shadcn/ui, MUI, etc.)
+  - Apply chosen palette colors consistently
+  - Implement responsive breakpoints
+  - Add dark mode variants if specified
+- After each component: run build check via Bash
+- Commit after each logical component group
 
-### Step 4: Report
+### Step 3: Audit (always runs, or standalone with --audit)
+Run 6-pillar UI audit directly:
+
+**Pillar 1 — Accessibility (A11y):**
+- Grep for missing alt, aria-*, role attributes
+- Check color contrast ratios (WCAG AA: 4.5:1)
+- Verify keyboard navigation (tabIndex, focus states)
+- Check form labels and error messages
+
+**Pillar 2 — Responsive:**
+- Grep for hardcoded px values (should use rem/em or responsive units)
+- Check for mobile breakpoints in CSS/Tailwind
+- Verify no horizontal scroll on mobile viewport
+
+**Pillar 3 — Performance:**
+- Check image optimization (next/image, lazy loading)
+- Look for large bundle imports (lodash full, moment.js)
+- Verify dynamic imports / code splitting for heavy components
+- Check for unnecessary re-renders (memo, useMemo, useCallback)
+
+**Pillar 4 — Consistency:**
+- Verify design tokens used consistently (colors, spacing, typography)
+- Check component naming conventions
+- Verify consistent spacing system (4px/8px grid)
+
+**Pillar 5 — UX Patterns:**
+- Loading states (skeleton, spinner)
+- Error states (error boundaries, fallbacks)
+- Empty states (placeholder content)
+- Hover/focus/active states on interactive elements
+
+**Pillar 6 — Code Quality:**
+- Component size (< 200 lines each)
+- Props interface defined (TypeScript)
+- Separation of concerns (logic vs presentation)
+
+### Step 4: Optimize (if --optimize or issues found in audit)
+- Fix critical audit findings
+- Add missing accessibility attributes
+- Replace heavy imports with lighter alternatives
+- Add missing responsive styles
+- Implement missing loading/error states
+
+### Step 5: Report
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  CGX:ui Phase N — Complete
+  CGX:ui — Results
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-| Check        | Status | Score |
-|--------------|--------|-------|
-| Design spec  | ✓      | —     |
-| Build        | ✓      | —     |
-| Accessibility| ✓      | 95%   |
-| Responsive   | ✓      | Pass  |
+| Pillar       | Score | Issues |
+|--------------|-------|--------|
+| Accessibility| 90%   | 2 minor|
+| Responsive   | 95%   | 1 fix  |
+| Performance  | 85%   | 3 opts |
+| Consistency  | 100%  | —      |
+| UX Patterns  | 80%   | 2 miss |
+| Code Quality | 95%   | 1 split|
+
+Overall: 91% ██████████████████████░░
+Fixes applied: 5 | Remaining: 4 minor
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 <format>Follow ~/.claude/cgx/output-format.md</format>
