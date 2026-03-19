@@ -54,7 +54,7 @@ CGX_COMMANDS="$HOME/.claude/commands/cgx"
 CK_SKILLS="$HOME/.claude/skills"
 GSD_DIR="$HOME/.claude/get-shit-done"
 GSD_COMMANDS="$HOME/.claude/commands/gsd"
-CGX_VERSION="0.5.0"
+CGX_VERSION="0.6.0"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Uninstall
@@ -62,6 +62,11 @@ CGX_VERSION="0.5.0"
 if [ "$UNINSTALL" = true ]; then
   echo -e "${CYAN}${BOLD}Uninstalling CGX...${NC}"
   rm -rf "$CGX_DIR" "$CGX_COMMANDS"
+  # Remove CGX rules from CLAUDE.md
+  CLAUDE_MD="$HOME/.claude/CLAUDE.md"
+  if [ -f "$CLAUDE_MD" ]; then
+    sed '/<!-- CGX-AUTO-ROUTING -->/,/<!-- \/CGX-AUTO-ROUTING -->/d' "$CLAUDE_MD" > "$CLAUDE_MD.tmp" && mv "$CLAUDE_MD.tmp" "$CLAUDE_MD"
+  fi
   echo -e "${GREEN}✓${NC} CGX removed. CK and GSD are untouched."
   exit 0
 fi
@@ -84,7 +89,7 @@ fi
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Step 1: Create directories
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-echo -e "${BOLD}[1/6] Creating directories...${NC}"
+echo -e "${BOLD}[1/7] Creating directories...${NC}"
 mkdir -p "$CGX_DIR" "$CGX_COMMANDS"
 echo -e "  ${GREEN}✓${NC} $CGX_DIR"
 echo -e "  ${GREEN}✓${NC} $CGX_COMMANDS"
@@ -96,7 +101,7 @@ chmod +x "$CGX_DIR/install.sh" 2>/dev/null || true
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Step 2: Write runtime utilities
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-echo -e "${BOLD}[2/6] Writing runtime utilities...${NC}"
+echo -e "${BOLD}[2/7] Writing runtime utilities...${NC}"
 
 # check-prerequisites.cjs
 cat > "$CGX_DIR/check-prerequisites.cjs" << 'UTILEOF'
@@ -186,7 +191,7 @@ echo -e "  ${GREEN}✓${NC} output-format.md"
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Step 3: Detect CK + GSD
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-echo -e "${BOLD}[3/6] Detecting installed systems...${NC}"
+echo -e "${BOLD}[3/7] Detecting installed systems...${NC}"
 
 CK_FOUND=false
 CK_SKILL_COUNT=0
@@ -213,7 +218,7 @@ fi
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Step 4: Auto-fetch if requested
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-echo -e "${BOLD}[4/6] Fetching latest versions...${NC}"
+echo -e "${BOLD}[4/7] Fetching latest versions...${NC}"
 
 if [ "$FETCH_GSD" = true ]; then
   echo -e "  ${CYAN}↓${NC} Fetching latest GSD via npm..."
@@ -271,7 +276,7 @@ fi
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Step 5: Write all CGX commands
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-echo -e "${BOLD}[5/6] Installing CGX commands (13)...${NC}"
+echo -e "${BOLD}[5/7] Installing CGX commands (13)...${NC}"
 
 # --- cgx:install ---
 cat > "$CGX_COMMANDS/install.md" << 'CMD_EOF'
@@ -950,9 +955,88 @@ CMD_EOF
 echo -e "  ${GREEN}✓${NC} 16 commands installed"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Step 6: Write config
+# Step 6: Install CGX auto-routing rules
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-echo -e "${BOLD}[6/6] Writing config...${NC}"
+echo -e "${BOLD}[6/7] Installing auto-routing rules...${NC}"
+
+# Write CGX rules file
+cat > "$CGX_DIR/cgx-rules.md" << 'RULESEOF'
+# CGX Auto-Routing Rules
+
+When CGX commands are installed (`~/.claude/commands/cgx/`), automatically use them:
+
+## Auto-Route Table
+Match user intent → invoke the CGX command via `Skill(skill="cgx:<cmd>")`:
+
+| User says / intent                                    | Invoke                          |
+|-------------------------------------------------------|---------------------------------|
+| Unclear request, vague, "I want to..."                | `Skill(skill="cgx:clarify")`    |
+| Strategy, vision, evaluate options, big picture       | `Skill(skill="cgx:think")`      |
+| New project, start fresh, initialize                  | `Skill(skill="cgx:new")`        |
+| Plan, design, architect, research approach            | `Skill(skill="cgx:plan")`       |
+| Build, implement, execute a phase                     | `Skill(skill="cgx:execute")`    |
+| Quick fix, small bug, minor change                    | `Skill(skill="cgx:quick")`      |
+| Complex bug, crash, investigation                     | `Skill(skill="cgx:debug")`      |
+| Review code, check quality, run tests                 | `Skill(skill="cgx:review")`     |
+| UI work, frontend, design                             | `Skill(skill="cgx:ui")`         |
+| Update docs, sync documentation                       | `Skill(skill="cgx:docs")`       |
+| Check progress, status, what's done                   | `Skill(skill="cgx:progress")`   |
+| Run everything automatically                          | `Skill(skill="cgx:autonomous")` |
+
+## When to auto-route
+- User describes a task naturally (not using slash commands)
+- The task clearly matches one of the intents above
+- Invoke the CGX command BEFORE starting manual work
+
+## When NOT to auto-route
+- User explicitly asks for a specific approach
+- Simple questions that don't need a pipeline
+- User is in the middle of a CGX command flow already
+
+## Output Format
+Always follow `~/.claude/cgx/output-format.md` — tables, icons, progress bars. No prose paragraphs.
+RULESEOF
+echo -e "  ${GREEN}✓${NC} cgx-rules.md"
+
+# Inject into global CLAUDE.md if not already present
+CLAUDE_MD="$HOME/.claude/CLAUDE.md"
+CGX_MARKER="<!-- CGX-AUTO-ROUTING -->"
+
+if [ -f "$CLAUDE_MD" ]; then
+  if ! grep -q "$CGX_MARKER" "$CLAUDE_MD" 2>/dev/null; then
+    # Append CGX rules reference
+    cat >> "$CLAUDE_MD" << INJECT_EOF
+
+$CGX_MARKER
+## CGX Auto-Routing
+CGX hybrid commands are installed. Follow the routing rules in \`~/.claude/cgx/cgx-rules.md\` to automatically use \`/cgx:*\` commands when user intent matches.
+Read \`~/.claude/cgx/cgx-rules.md\` for the auto-route table.
+Read \`~/.claude/cgx/output-format.md\` for output formatting rules.
+<!-- /CGX-AUTO-ROUTING -->
+INJECT_EOF
+    echo -e "  ${GREEN}✓${NC} Injected CGX rules into CLAUDE.md"
+  else
+    echo -e "  ${GREEN}✓${NC} CLAUDE.md already has CGX rules"
+  fi
+else
+  # Create minimal CLAUDE.md with CGX rules
+  cat > "$CLAUDE_MD" << INJECT_EOF
+# CLAUDE.md
+
+$CGX_MARKER
+## CGX Auto-Routing
+CGX hybrid commands are installed. Follow the routing rules in \`~/.claude/cgx/cgx-rules.md\` to automatically use \`/cgx:*\` commands when user intent matches.
+Read \`~/.claude/cgx/cgx-rules.md\` for the auto-route table.
+Read \`~/.claude/cgx/output-format.md\` for output formatting rules.
+<!-- /CGX-AUTO-ROUTING -->
+INJECT_EOF
+  echo -e "  ${GREEN}✓${NC} Created CLAUDE.md with CGX rules"
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Step 7: Write config
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+echo -e "${BOLD}[7/7] Writing config...${NC}"
 
 CONFIG_FILE="$CGX_DIR/config.json"
 
