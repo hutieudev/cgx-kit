@@ -54,7 +54,7 @@ CGX_COMMANDS="$HOME/.claude/commands/cgx"
 CK_SKILLS="$HOME/.claude/skills"
 GSD_DIR="$HOME/.claude/get-shit-done"
 GSD_COMMANDS="$HOME/.claude/commands/gsd"
-CGX_VERSION="0.8.1"
+CGX_VERSION="0.8.2"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Uninstall
@@ -612,39 +612,72 @@ Quick action with direct implementation. No skill delegation.
 ## GUIDED PIPELINE
 
 ### Step 1: Detect Intent
-- Bug keywords (fix, bug, error, crash, broken, wrong, fail) → bug mode
+- Bug keywords (fix, bug, error, crash, broken, wrong, fail, issue, not working) → bug mode
 - Everything else → feature mode
 - Or use --fix / --feature flag
 
-### Step 2: Analyze
-- Bug mode: Read error context, grep for related code, identify root cause
-- Feature mode: Understand requirement, scan codebase for where to implement
+### Step 2: Analyze (bug mode — enhanced with CK fix methodology)
+Apply systematic root cause analysis:
+1. **Reproduce**: Try to trigger the bug via Bash (run command, test, curl)
+2. **Collect evidence**: Read error messages, stack traces, logs
+3. **Trace the chain**: Grep for error origin → follow call chain through files
+4. **Identify root cause**: Classify the bug type:
+   | Type           | Look for                              |
+   |----------------|---------------------------------------|
+   | Logic error    | Wrong condition, missing case          |
+   | Type mismatch  | null/undefined, wrong type passed      |
+   | State bug      | Race condition, stale state            |
+   | Integration    | API contract mismatch, wrong endpoint  |
+   | Config         | Wrong env var, missing setting         |
+5. **Check for related bugs**: Grep for similar patterns elsewhere — same bug might exist in multiple places
 
-### Step 3: Implement
+### Step 2b: Analyze (feature mode)
+- Understand requirement from description
+- Scan codebase with Glob/Grep for where to implement
+- Check existing patterns to follow (consistency)
+
+### Step 3: Plan Fix/Feature
+Before implementing, outline:
+```
+Root cause: <what's wrong>
+Fix: <what to change>
+Files: <which files>
+Risk: <what could break>
+```
+
+### Step 4: Implement
 - Make changes using Edit/Write tools
 - Run compile/lint check via Bash
+- If fix doesn't work on first attempt:
+  - Re-analyze with different hypothesis
+  - Check if fix introduced new issues
+  - Apply problem-solving techniques: simplify the problem, isolate variables
 
-### Step 4: Commit
+### Step 5: Commit
 ```bash
 git add <changed files>
 git commit -m "<type>: <description>"
 ```
 
-### Step 5: Test (skip if --no-test)
-- Run existing tests via Bash
-- Verify no regressions
+### Step 6: Verify (skip if --no-test)
+- **Reproduce test**: Re-run the original failing scenario → must pass now
+- **Regression test**: Run full test suite → no new failures
+- **Edge cases**: Test boundary conditions related to the fix
+- If tests fail: go back to Step 4, fix again
 
-### Step 6: Report
+### Step 7: Report
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   CGX:quick — Complete
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-| Item    | Details               |
-|---------|-----------------------|
-| Mode    | bug/feature           |
-| Changes | N files modified      |
-| Commit  | abc1234               |
-| Tests   | ✓ passed              |
+| Item       | Details               |
+|------------|-----------------------|
+| Mode       | bug/feature           |
+| Root cause | <if bug>              |
+| Changes    | N files modified      |
+| Commit     | abc1234               |
+| Tests      | ✓ N/N passed          |
+| Related    | N similar spots checked|
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 <format>Follow ~/.claude/cgx/output-format.md</format>
