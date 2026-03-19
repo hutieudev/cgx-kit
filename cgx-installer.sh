@@ -54,7 +54,7 @@ CGX_COMMANDS="$HOME/.claude/commands/cgx"
 CK_SKILLS="$HOME/.claude/skills"
 GSD_DIR="$HOME/.claude/get-shit-done"
 GSD_COMMANDS="$HOME/.claude/commands/gsd"
-CGX_VERSION="0.9.0"
+CGX_VERSION="0.9.1"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Uninstall
@@ -551,6 +551,12 @@ Build phase code, then quality gates. CGX stays in control throughout.
 <process>
 ## GUIDED PIPELINE
 
+### Step 0: Understanding Gate (MANDATORY)
+Read plan and verify understanding before building:
+- Read `.planning/phase-N/PLAN.md`
+- If plan unclear or missing critical details → ask user via AskUserQuestion
+- Show task checklist and confirm scope with user before proceeding
+
 ### Step 1: Read Plan
 - Read `.planning/phase-N/PLAN.md` for tasks
 - Show task checklist to user
@@ -610,6 +616,28 @@ Quick action with direct implementation. No skill delegation.
 <context>$ARGUMENTS</context>
 <process>
 ## GUIDED PIPELINE
+
+### Step 0: Understanding Gate (MANDATORY — runs before any action)
+Before ANY implementation, verify understanding reaches 100%:
+- Parse user description → score understanding:
+  | Dimension        | Check                                    |
+  |------------------|------------------------------------------|
+  | What's wrong/needed | Can I describe the problem in 1 sentence? |
+  | Where in code    | Do I know which files/modules?            |
+  | Expected behavior| Do I know what "fixed/done" looks like?   |
+  | Reproduction     | Can I reproduce or verify?                |
+  | Impact scope     | Do I know what else might be affected?    |
+
+- If ANY dimension unclear → ask user via AskUserQuestion before proceeding
+- Show understanding %:
+  ```
+  Understanding: 60% ██████████████░░░░░░░░
+  ✓ Problem: clear
+  ✗ Location: which file?
+  ✗ Expected: what should happen instead?
+  ```
+- Keep asking until 100%. NEVER implement with < 100% understanding.
+- Only proceed to Step 1 when all dimensions are clear.
 
 ### Step 1: Detect Intent
 - Bug keywords (fix, bug, error, crash, broken, wrong, fail, issue, not working) → bug mode
@@ -698,6 +726,17 @@ Debug with scientific method. CGX stays in control.
 <context>$ARGUMENTS</context>
 <process>
 ## GUIDED PIPELINE
+
+### Step 0: Understanding Gate (MANDATORY)
+Before debugging, verify 100% understanding of the issue:
+- What exactly is happening? (error message, behavior)
+- When does it happen? (always, sometimes, after X)
+- Where in the app? (which page, API, function)
+- What changed recently? (new code, dependency update, config)
+- How to reproduce? (steps, commands, input data)
+
+If ANY info missing → ask user via AskUserQuestion. Show understanding %.
+NEVER start debugging with < 100% understanding.
 
 ### Step 1: Reproduce
 - Understand the issue from description
