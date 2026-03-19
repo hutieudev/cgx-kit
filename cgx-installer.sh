@@ -54,7 +54,7 @@ CGX_COMMANDS="$HOME/.claude/commands/cgx"
 CK_SKILLS="$HOME/.claude/skills"
 GSD_DIR="$HOME/.claude/get-shit-done"
 GSD_COMMANDS="$HOME/.claude/commands/gsd"
-CGX_VERSION="0.2.0"
+CGX_VERSION="0.3.0"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Uninstall
@@ -263,6 +263,9 @@ WORKFLOW (use in order)
   /cgx:execute <phase>  Execute + Review + Test + Verify
   /cgx:autonomous       Full auto with CK quality gates per phase
 
+DISCOVERY
+  /cgx:clarify <desc>   Deep interview — 10+ questions until 100% understanding
+
 QUICK ACCESS
   /cgx:do <text>        Smart router — describe what you want
   /cgx:quick <task>     Small task with quality gates
@@ -339,6 +342,7 @@ Check `.planning/` existence.
 Route by first match:
 | Text describes... | Route |
 |-------------------|-------|
+| Unclear, vague, need to discuss | `/cgx:clarify` |
 | New project, setup, initialize | `/cgx:new` |
 | Bug fix, quick error, broken | `/cgx:fix` |
 | Complex bug, crash, investigate | `/cgx:debug` |
@@ -549,6 +553,112 @@ GSD ui-phase (UI-SPEC) → CK ui-ux-pro-max (design) → cgx:execute → GSD ui-
 </process>
 CMD_EOF
 
+# --- cgx:clarify ---
+cat > "$CGX_COMMANDS/clarify.md" << 'CMD_EOF'
+---
+name: cgx:clarify
+description: Deep requirement clarification — ask 10+ questions until 100% understanding before action
+argument-hint: "<what you want to do or problem description>"
+allowed-tools: [Read, Glob, Grep, Bash, AskUserQuestion]
+---
+<objective>
+Interview the user with targeted questions to reach 100% understanding before any implementation.
+Minimum 10 questions. Show understanding % after each answer. Keep asking until 100%.
+</objective>
+<context>$ARGUMENTS</context>
+<process>
+## Protocol
+
+You are a senior technical consultant. Your job is to FULLY understand what the user needs before ANY work begins.
+
+### Step 1: Initial Analysis
+Read the user's description. Identify:
+- What is clear vs ambiguous
+- Missing technical details
+- Unstated assumptions
+- Scope boundaries unclear
+- Success criteria undefined
+
+Calculate initial understanding % based on how complete the description is.
+Display: `Understanding: XX% — need more clarity on: [list gaps]`
+
+### Step 2: Question Rounds (minimum 10 questions)
+
+Ask questions in batches of 3-5 using AskUserQuestion. Each batch targets different dimensions:
+
+**Round 1 — Problem/Goal (Q1-3):**
+- What exactly is the problem or desired outcome?
+- What triggered this need? (bug report, feature request, tech debt, user feedback)
+- What does "done" look like? How will you verify success?
+
+**Round 2 — Scope & Constraints (Q4-6):**
+- What files/modules/areas are involved?
+- What should NOT be changed? (boundaries, dependencies, APIs)
+- Any deadlines, performance requirements, or tech constraints?
+
+**Round 3 — Context & Dependencies (Q7-9):**
+- Who are the end users? What's their workflow?
+- Are there related features, existing implementations, or prior attempts?
+- Any external systems, APIs, or services involved?
+
+**Round 4 — Edge Cases & Risks (Q10+):**
+- What could go wrong? Known edge cases?
+- Any security, accessibility, or compliance concerns?
+- What's the rollback plan if this doesn't work?
+
+After EACH user response, update the understanding %:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Understanding: 73% ████████████████░░░░░░
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Problem: clear
+✓ Goal: clear
+✓ Scope: clear
+✗ Edge cases: need more info
+✗ Success criteria: vague
+✗ Dependencies: unknown
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Understanding % Calculation
+Score each dimension (0-100), then average:
+- Problem definition: __%
+- Desired outcome: __%
+- Scope boundaries: __%
+- Technical constraints: __%
+- Success criteria: __%
+- Edge cases & risks: __%
+- Context & dependencies: __%
+- User/stakeholder needs: __%
+- Priority & timeline: __%
+- Rollback/safety: __%
+
+### Step 3: Keep Asking Until 100%
+- If any dimension < 80%: ask targeted follow-ups for that dimension
+- If understanding >= 90% but < 100%: ask 2-3 final precision questions
+- NEVER stop below 100%
+
+### Step 4: Summary & Route
+When 100% reached, output:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Understanding: 100% ██████████████████████
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+Then produce a structured brief:
+- **Problem:** 1-2 sentences
+- **Goal:** what success looks like
+- **Scope:** files/modules involved, boundaries
+- **Constraints:** tech, performance, timeline
+- **Edge cases:** identified risks
+- **Success criteria:** how to verify done
+- **Recommended approach:** which cgx command to use next
+
+Ask user: "Ready to proceed with `/cgx:<recommended>`?"
+</process>
+CMD_EOF
+
 # --- cgx:research ---
 cat > "$CGX_COMMANDS/research.md" << 'CMD_EOF'
 ---
@@ -698,7 +808,7 @@ Clean session pause: GSD pause-work (context handoff) + session summary + uncomm
 </process>
 CMD_EOF
 
-echo -e "  ${GREEN}✓${NC} 20 commands installed"
+echo -e "  ${GREEN}✓${NC} 21 commands installed"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Step 6: Write config
@@ -744,7 +854,7 @@ echo ""
 echo -e "  Mode: ${BOLD}${MODE}${NC}"
 echo -e "  CK:   $([ "$CK_FOUND" = true ] && echo -e "${GREEN}✓ ${CK_SKILL_COUNT} skills${NC}" || echo -e "${YELLOW}✗ Missing${NC}")"
 echo -e "  GSD:  $([ "$GSD_FOUND" = true ] && echo -e "${GREEN}✓ v${GSD_VERSION}${NC}" || echo -e "${YELLOW}✗ Missing${NC}")"
-echo -e "  CGX:  ${GREEN}✓ 20 commands${NC}"
+echo -e "  CGX:  ${GREEN}✓ 21 commands${NC}"
 echo ""
 echo -e "  ${BOLD}Usage:${NC}"
 echo -e "    /cgx:help       — Show all commands"

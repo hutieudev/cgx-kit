@@ -57,6 +57,11 @@ Then in Claude Code:
 | `/cgx:execute <phase>` | CK cook → GSD execute → CK review → CK test → GSD verify |
 | `/cgx:autonomous` | Full auto: plan → execute per phase with quality gates |
 
+### Discovery
+| Command | Pipeline |
+|---------|----------|
+| `/cgx:clarify <desc>` | 10+ targeted questions → understanding % bar → structured brief → route |
+
 ### Quick Access
 | Command | Pipeline |
 |---------|----------|
