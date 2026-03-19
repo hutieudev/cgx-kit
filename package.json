@@ -1,6 +1,6 @@
 {
   "name": "cgx-kit",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "CGX — CK × GSD Hybrid Kit for Claude Code",
   "bin": {
     "cgx-kit": "./bin/cgx.js"

@@ -54,7 +54,7 @@ CGX_COMMANDS="$HOME/.claude/commands/cgx"
 CK_SKILLS="$HOME/.claude/skills"
 GSD_DIR="$HOME/.claude/get-shit-done"
 GSD_COMMANDS="$HOME/.claude/commands/gsd"
-CGX_VERSION="0.7.0"
+CGX_VERSION="0.8.0"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Uninstall
@@ -274,9 +274,9 @@ if [ "$CK_FOUND" = false ] && [ "$GSD_FOUND" = false ]; then
 fi
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Step 5: Write all CGX commands
+# Step 5: Write all CGX commands (guided pipeline — no Skill delegation)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-echo -e "${BOLD}[5/7] Installing CGX commands (13)...${NC}"
+echo -e "${BOLD}[5/7] Installing CGX commands...${NC}"
 
 # --- cgx:install ---
 cat > "$CGX_COMMANDS/install.md" << 'CMD_EOF'
@@ -285,7 +285,7 @@ name: cgx:install
 description: Detect CK + GSD installations and setup CGX hybrid kit
 allowed-tools: [Bash, Read, AskUserQuestion]
 ---
-<objective>Run CGX installer to detect systems, fetch latest, and verify readiness.</objective>
+<objective>Run CGX installer to detect systems and verify readiness.</objective>
 <process>
 ## 1. Run Installer
 ```bash
@@ -295,7 +295,7 @@ bash "$HOME/.claude/cgx/install.sh"
 ```bash
 node "$HOME/.claude/cgx/check-prerequisites.cjs" --json
 ```
-Report the detected mode. Show available commands with `/cgx:help`.
+Report detected mode. Show commands with `/cgx:help`.
 <format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
@@ -306,51 +306,46 @@ cat > "$CGX_COMMANDS/help.md" << 'CMD_EOF'
 name: cgx:help
 description: Show all CGX hybrid commands and usage guide
 ---
-<objective>Display the complete CGX command reference.</objective>
+<objective>Display CGX command reference.</objective>
 <process>
 ```bash
 node "$HOME/.claude/cgx/check-prerequisites.cjs" --summary
 ```
-Then display:
+Then display the command table:
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- CGX — CK × GSD Hybrid Kit
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-SETUP
-  /cgx:install          Detect CK + GSD, setup config
-  /cgx:update           Fetch latest CK + GSD versions
-
-WORKFLOW (use in order)
-  /cgx:new              New project (GSD lifecycle + CK bootstrap)
-  /cgx:plan <phase>     Research + Plan (CK research → GSD planner)
-  /cgx:execute <phase>  Execute + Review + Test + Verify
-  /cgx:autonomous       Full auto with CK quality gates per phase
+ CGX v0.8.0 — Guided Pipeline Kit
 
 DISCOVERY
   /cgx:think <topic>    Clarify → Research → Brainstorm → Vision (--quick for clarify only)
 
-QUICK ACCESS
-  /cgx:do <text>        Smart router — auto-route to best command
-  /cgx:quick <task>     Bug fix or feature + commit + test (auto-detect)
-  /cgx:debug <issue>    Deep investigation with checkpoints
+WORKFLOW
+  /cgx:new              Init project structure + roadmap
+  /cgx:plan <phase>     Research + plan (--research-only for standalone)
+  /cgx:execute <phase>  Build + review + test + verify
+  /cgx:autonomous       Auto-loop all phases
+
+QUICK
+  /cgx:do <text>        Smart router
+  /cgx:quick <task>     Bug/feature auto-detect + commit + test
+  /cgx:debug <issue>    Root cause analysis + fix
 
 QUALITY
-  /cgx:review <phase>   Review + test + simplify + verify (flags: --test-only, --simplify)
+  /cgx:review <phase>   Review + test + simplify (--test-only, --simplify)
   /cgx:ui <phase>       UI design + build + audit
 
 KNOWLEDGE
-  /cgx:plan <phase>     Research + plan (flag: --research-only for standalone research)
-  /cgx:docs [action]    Documentation sync + analysis
+  /cgx:docs [action]    Documentation sync
 
 SESSION
-  /cgx:progress         Dashboard + pause/resume (flags: --pause, --resume)
+  /cgx:progress         Dashboard (--pause, --resume)
 
-HOW IT WORKS
-  GSD provides: project state, roadmap, phases, wave execution, atomic commits
-  CK  provides: research, cook, code-review, test, debug, docs-seeker, ui-ux
+SETUP
+  /cgx:install          Detect CK + GSD
+  /cgx:update           Fetch latest versions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
-<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
+<format>Follow ~/.claude/cgx/output-format.md</format>
 </process>
 CMD_EOF
 
@@ -359,31 +354,30 @@ cat > "$CGX_COMMANDS/update.md" << 'CMD_EOF'
 ---
 name: cgx:update
 description: Update CK + GSD to latest versions and refresh CGX config
-argument-hint: "[--ck-only] [--gsd-only] [--all]"
+argument-hint: "[--ck-only] [--gsd-only]"
 allowed-tools: [Bash, Read, AskUserQuestion]
 ---
-<objective>Auto-fetch latest CK and GSD, then refresh CGX config.</objective>
+<objective>Fetch latest CK and GSD, refresh config.</objective>
 <context>$ARGUMENTS</context>
 <process>
-## 1. Check Current
+## 1. Check current versions
 ```bash
 node "$HOME/.claude/cgx/check-prerequisites.cjs" --json
 ```
 ## 2. Update GSD (skip if --ck-only)
+```bash
+npx -y get-shit-done-cc@latest --claude --global
 ```
-Skill(skill="gsd:update")
-```
-Or direct: `npx -y get-shit-done-cc@latest --claude --global`
 ## 3. Update CK (skip if --gsd-only)
 ```bash
 bash "$HOME/.claude/cgx/install.sh" --fetch-ck
 ```
-## 4. Refresh Config
+## 4. Refresh CGX config
 ```bash
 bash "$HOME/.claude/cgx/install.sh"
 ```
-Display before/after versions. Remind to restart session.
-<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
+Display before/after versions table.
+<format>Follow ~/.claude/cgx/output-format.md</format>
 </process>
 CMD_EOF
 
@@ -392,141 +386,32 @@ cat > "$CGX_COMMANDS/do.md" << 'CMD_EOF'
 ---
 name: cgx:do
 description: Smart router — describe what you want, routes to the best CGX command
-argument-hint: "<description of what you want to do>"
+argument-hint: "<description>"
 allowed-tools: [Read, Bash, AskUserQuestion]
 ---
-<objective>Analyze freeform text and route to best CGX command. Dispatcher only.</objective>
+<objective>Analyze text → route to best CGX command. Show routing table, then invoke.</objective>
 <context>$ARGUMENTS</context>
 <process>
 If empty, ask user what they want to do.
-Check `.planning/` existence.
 Route by first match:
-| Text describes... | Route |
-|-------------------|-------|
-| Unclear, vague, need to discuss | `/cgx:think --quick` |
-| Strategy, vision, big picture, evaluate | `/cgx:think` |
-| New project, setup, initialize | `/cgx:new` |
-| Bug fix, quick error, broken | `/cgx:fix` |
-| Complex bug, crash, investigate | `/cgx:debug` |
-| Planning, approach, strategy | `/cgx:plan` |
-| Research, docs, library, how-to | `/cgx:research` |
-| Building, implementing, execute | `/cgx:execute` |
-| Review, quality, audit | `/cgx:review` |
-| Test, coverage, verify | `/cgx:test` |
-| Refactor, simplify, cleanup | `/cgx:simplify` |
-| UI, styling, frontend visuals | `/cgx:ui` |
-| Docs, documentation, update docs | `/cgx:docs` |
-| Progress, status | `/cgx:progress` |
-| Resume, continue, pick up | `/cgx:resume` |
-| Pause, stop, save context | `/cgx:pause` |
-| All phases auto | `/cgx:autonomous` |
-| Small specific task | `/cgx:quick` |
-If ambiguous: ask user with top 2-3 options.
-Invoke matched command via `Skill(skill="cgx:<match>", args="...")`.
-<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
-</process>
-CMD_EOF
-
-# --- cgx:plan ---
-cat > "$CGX_COMMANDS/plan.md" << 'CMD_EOF'
----
-name: cgx:plan
-description: Research + Plan — CK deep research then GSD structured planning
-argument-hint: "<phase-number|topic> [--research-only] [--skip-discuss] [--skip-research] [--deep]"
-allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
----
-<objective>
-Full planning pipeline with integrated research. Use --research-only for standalone research without planning.
-Replaces separate cgx:research. All research capabilities built in.
-</objective>
-<context>$ARGUMENTS</context>
-<process>
-## 1. Check: `node "$HOME/.claude/cgx/check-prerequisites.cjs" --json`
-## 2. Context (GSD): `Skill(skill="gsd:discuss-phase", args="${PHASE} --auto")` (skip if --skip-discuss)
-## 3. Research phase (skip if --skip-research):
-  a. Docs lookup (CK): `Skill(skill="docs-seeker", args="$ARGUMENTS")` — latest library/framework docs
-  b. Brainstorm (CK): `Skill(skill="brainstorm", args="$ARGUMENTS approaches")`
-  c. Deep research (if --deep): Spawn 1-2 researcher agents for different aspects
-  d. Save research report to plans/reports/
-## 4. If --research-only: Stop here. Output consolidated research report.
-## 5. Plan (GSD): `Skill(skill="gsd:plan-phase", args="${PHASE}")`
-## 6. Report: Step statuses. Next: `/cgx:execute ${PHASE}`
-<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
-</process>
-CMD_EOF
-
-# --- cgx:execute ---
-cat > "$CGX_COMMANDS/execute.md" << 'CMD_EOF'
----
-name: cgx:execute
-description: Execute phase with full quality pipeline — cook, build, review, test, verify
-argument-hint: "<phase-number> [--skip-review] [--skip-test] [--gaps-only]"
-allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
----
-<objective>
-Pipeline: CK cook pre-check → GSD execute-phase → CK code-review → CK test → GSD verify-work.
-</objective>
-<context>Phase: $ARGUMENTS</context>
-<process>
-## 1. Check prerequisites
-## 2. Pre-check (CK cook): Validate plan readiness. `Skill(skill="cook", args="<plan-path> --auto")`
-## 3. Build (GSD): `Skill(skill="gsd:execute-phase", args="${PHASE}")`. Stop if fails.
-## 4. Review (CK): Spawn code-reviewer agent on changed files. Skip if --skip-review. Fix critical issues.
-## 5. Test (CK): Spawn tester agent. Skip if --skip-test. Fix failures before proceeding.
-## 6. Verify (GSD): `Skill(skill="gsd:verify-work", args="${PHASE}")`
-## 7. Report: Step statuses table. Next: `/cgx:progress`
-<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
-</process>
-CMD_EOF
-
-# --- cgx:quick ---
-cat > "$CGX_COMMANDS/quick.md" << 'CMD_EOF'
----
-name: cgx:quick
-description: Quick task — auto-detects bug/feature, fix + commit + test in one shot
-argument-hint: "<task or bug description> [--fix] [--feature] [--no-test]"
-allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
----
-<objective>
-All-in-one quick action: auto-detect bug vs feature → CK fix or cook → implement → GSD atomic commit → CK test verify.
-Replaces separate cgx:fix. Use --fix to force bug mode, --feature for feature mode.
-</objective>
-<context>$ARGUMENTS</context>
-<process>
-## 1. Check prerequisites
-## 2. Auto-detect intent (or use --fix/--feature flag):
-  - Bug keywords (fix, bug, error, crash, broken, wrong, fail) → bug mode
-  - Everything else → feature mode
-## 3. Analysis:
-  - Bug mode: `Skill(skill="fix", args="$ARGUMENTS")` — root cause analysis
-  - Feature mode: `Skill(skill="cook", args="$ARGUMENTS --fast")` — pre-check
-## 4. Implement the fix or feature based on analysis
-## 5. Commit (GSD): `Skill(skill="gsd:quick", args="$ARGUMENTS")`
-## 6. Verify (unless --no-test): `Skill(skill="test", args="regression check")`
-## 7. Report: Mode (bug/feature), CK skill used, commit hash, test result
-<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
-</process>
-CMD_EOF
-
-# --- cgx:debug ---
-cat > "$CGX_COMMANDS/debug.md" << 'CMD_EOF'
----
-name: cgx:debug
-description: Systematic debug — CK root cause analysis + GSD checkpoint persistence
-argument-hint: "<issue description>"
-allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
----
-<objective>
-CK debug (root cause) + CK sequential-thinking → GSD debug (checkpoints) → CK test verify.
-</objective>
-<context>$ARGUMENTS</context>
-<process>
-## 1. Analysis (CK): `Skill(skill="debug", args="$ARGUMENTS")`
-## 2. Deep analysis: If unclear, `Skill(skill="sequential-thinking", args="...")`
-## 3. Fix (GSD): `Skill(skill="gsd:debug", args="$ARGUMENTS")` — persistent DEBUG.md + checkpoints
-## 4. Verify (CK): Spawn tester to confirm fix
-## 5. Report: Root cause, fix, test result
-<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
+| Intent                          | Route                      |
+|---------------------------------|----------------------------|
+| Unclear, vague, discuss         | /cgx:think --quick         |
+| Strategy, vision, evaluate      | /cgx:think                 |
+| New project, initialize         | /cgx:new                   |
+| Quick fix, small bug            | /cgx:quick --fix           |
+| Complex bug, investigate        | /cgx:debug                 |
+| Plan, research, approach        | /cgx:plan                  |
+| Build, implement                | /cgx:execute               |
+| Review, quality, test           | /cgx:review                |
+| UI, frontend, design            | /cgx:ui                    |
+| Documentation                   | /cgx:docs                  |
+| Progress, status                | /cgx:progress              |
+| Auto all phases                 | /cgx:autonomous            |
+| Small task                      | /cgx:quick                 |
+If ambiguous: ask user with 2-3 options via AskUserQuestion.
+Display: `→ Routing to /cgx:<match>` then invoke.
+<format>Follow ~/.claude/cgx/output-format.md</format>
 </process>
 CMD_EOF
 
@@ -534,20 +419,287 @@ CMD_EOF
 cat > "$CGX_COMMANDS/new.md" << 'CMD_EOF'
 ---
 name: cgx:new
-description: New project — GSD lifecycle setup + CK bootstrap
+description: New project — guided setup with direct tool operations
 argument-hint: "[project description]"
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
 ---
 <objective>
-CK bootstrap (tech research) → GSD new-project (lifecycle) → CK docs init.
+Set up new project with guided pipeline. CGX stays in control throughout — no skill delegation.
 </objective>
 <context>$ARGUMENTS</context>
 <process>
-## 1. Tech research (CK): `Skill(skill="bootstrap", args="$ARGUMENTS --fast")`
-## 2. Project setup (GSD): `Skill(skill="gsd:new-project", args="$ARGUMENTS")`
-## 3. Docs init (CK): `Skill(skill="docs", args="init")`
-## 4. Report: GSD .planning/ + CK docs/ ready. Next: `/cgx:plan 1`
-<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
+## GUIDED PIPELINE — CGX stays in control
+
+### Step 1: Gather Requirements
+Use AskUserQuestion to ask:
+- Project name and description?
+- Tech stack (frontend, backend, database)?
+- Key features (list 3-5 core features)?
+- Target users?
+- Any constraints (timeline, existing code, team size)?
+
+Show understanding % after answers.
+
+### Step 2: Create Project Structure
+Using Write tool, create:
+```
+.planning/
+├── PROJECT.md      ← from user answers
+├── ROADMAP.md      ← 5-8 phases max
+└── STATE.md        ← "Phase 1 - not started"
+
+docs/
+├── project-overview-pdr.md
+├── system-architecture.md
+├── code-standards.md
+└── codebase-summary.md
+```
+
+ROADMAP.md rules:
+- MAX 8 phases (gộp nếu cần)
+- Each phase = 1 deliverable rõ ràng
+- Phase 1 always = project setup + config
+
+### Step 3: Research (optional)
+Spawn 1 researcher Agent to check latest docs for chosen tech stack.
+
+### Step 4: Report
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CGX:new — Complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+| Item        | Status | Details           |
+|-------------|--------|-------------------|
+| PROJECT.md  | ✓      | Created           |
+| ROADMAP.md  | ✓      | N phases          |
+| docs/       | ✓      | 4 files           |
+
+→ Next: /cgx:plan 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+<format>Follow ~/.claude/cgx/output-format.md</format>
+</process>
+CMD_EOF
+
+# --- cgx:plan ---
+cat > "$CGX_COMMANDS/plan.md" << 'CMD_EOF'
+---
+name: cgx:plan
+description: Research + Plan — guided pipeline with direct operations
+argument-hint: "<phase-number> [--research-only] [--skip-research] [--deep]"
+allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
+---
+<objective>
+Plan a phase with integrated research. CGX stays in control — uses tools directly.
+</objective>
+<context>$ARGUMENTS</context>
+<process>
+## GUIDED PIPELINE
+
+### Step 1: Read Context
+- Read .planning/ROADMAP.md to get phase description
+- Read .planning/PROJECT.md for project context
+- Read .planning/STATE.md for current status
+- Scan codebase with Glob/Grep for related existing code
+
+### Step 2: Research (skip if --skip-research)
+- Spawn researcher Agent to look up latest docs for technologies in this phase
+- If --deep: spawn 2 researcher Agents for different aspects
+- Scan codebase for patterns, existing implementations
+- Output research findings as table
+
+If --research-only: output report and STOP.
+
+### Step 3: Create Plan
+Using Write tool, create `.planning/phase-N/PLAN.md`:
+- Tasks breakdown (numbered, specific)
+- Files to create/modify
+- Dependencies between tasks
+- Success criteria
+- Estimated complexity per task
+
+### Step 4: Report
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CGX:plan Phase N — Complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+| Step     | Status | Details              |
+|----------|--------|----------------------|
+| Context  | ✓      | Read 3 files         |
+| Research | ✓      | N findings           |
+| Plan     | ✓      | N tasks              |
+
+→ Next: /cgx:execute N
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+<format>Follow ~/.claude/cgx/output-format.md</format>
+</process>
+CMD_EOF
+
+# --- cgx:execute ---
+cat > "$CGX_COMMANDS/execute.md" << 'CMD_EOF'
+---
+name: cgx:execute
+description: Execute phase — build + review + test + verify with guided pipeline
+argument-hint: "<phase-number> [--skip-review] [--skip-test]"
+allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
+---
+<objective>
+Build phase code, then quality gates. CGX stays in control throughout.
+</objective>
+<context>Phase: $ARGUMENTS</context>
+<process>
+## GUIDED PIPELINE
+
+### Step 1: Read Plan
+- Read `.planning/phase-N/PLAN.md` for tasks
+- Show task checklist to user
+
+### Step 2: Build
+- Implement each task from the plan
+- Use Edit/Write tools directly
+- After each task: run compile/lint check via Bash
+- Mark tasks done in checklist
+- Commit after each logical unit (git add + commit)
+
+### Step 3: Review (skip if --skip-review)
+- Spawn code-reviewer Agent on changed files
+- Fix critical issues found
+- Show review results table
+
+### Step 4: Test (skip if --skip-test)
+- Spawn tester Agent to run tests
+- Fix failing tests
+- Show test results table
+
+### Step 5: Verify
+- Read phase plan success criteria
+- Check each criterion against implementation
+- Update .planning/STATE.md
+
+### Step 6: Report
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CGX:execute Phase N — Complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+| Step    | Status | Details            |
+|---------|--------|--------------------|
+| Build   | ✓      | N tasks done       |
+| Review  | ✓      | N issues fixed     |
+| Test    | ✓      | N/N passed         |
+| Verify  | ✓      | Criteria met       |
+
+→ Next: /cgx:plan N+1 or /cgx:progress
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+<format>Follow ~/.claude/cgx/output-format.md</format>
+</process>
+CMD_EOF
+
+# --- cgx:quick ---
+cat > "$CGX_COMMANDS/quick.md" << 'CMD_EOF'
+---
+name: cgx:quick
+description: Quick task — auto-detect bug/feature, implement + commit + test
+argument-hint: "<task or bug description> [--fix] [--feature] [--no-test]"
+allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
+---
+<objective>
+Quick action with direct implementation. No skill delegation.
+</objective>
+<context>$ARGUMENTS</context>
+<process>
+## GUIDED PIPELINE
+
+### Step 1: Detect Intent
+- Bug keywords (fix, bug, error, crash, broken, wrong, fail) → bug mode
+- Everything else → feature mode
+- Or use --fix / --feature flag
+
+### Step 2: Analyze
+- Bug mode: Read error context, grep for related code, identify root cause
+- Feature mode: Understand requirement, scan codebase for where to implement
+
+### Step 3: Implement
+- Make changes using Edit/Write tools
+- Run compile/lint check via Bash
+
+### Step 4: Commit
+```bash
+git add <changed files>
+git commit -m "<type>: <description>"
+```
+
+### Step 5: Test (skip if --no-test)
+- Run existing tests via Bash
+- Verify no regressions
+
+### Step 6: Report
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CGX:quick — Complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+| Item    | Details               |
+|---------|-----------------------|
+| Mode    | bug/feature           |
+| Changes | N files modified      |
+| Commit  | abc1234               |
+| Tests   | ✓ passed              |
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+<format>Follow ~/.claude/cgx/output-format.md</format>
+</process>
+CMD_EOF
+
+# --- cgx:debug ---
+cat > "$CGX_COMMANDS/debug.md" << 'CMD_EOF'
+---
+name: cgx:debug
+description: Systematic debug — root cause analysis + fix + verify
+argument-hint: "<issue description>"
+allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
+---
+<objective>
+Debug with scientific method. CGX stays in control.
+</objective>
+<context>$ARGUMENTS</context>
+<process>
+## GUIDED PIPELINE
+
+### Step 1: Reproduce
+- Understand the issue from description
+- Try to reproduce via Bash (run commands, tests)
+- Collect error messages, stack traces
+
+### Step 2: Investigate
+- Grep codebase for related code
+- Read relevant files
+- Form hypothesis about root cause
+- Save checkpoint: Write findings to .planning/DEBUG.md
+
+### Step 3: Fix
+- Implement fix using Edit tool
+- Run compile check
+
+### Step 4: Verify
+- Re-run the reproduction steps
+- Run related tests
+- Confirm issue is resolved
+
+### Step 5: Report
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CGX:debug — Complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+| Item       | Details               |
+|------------|-----------------------|
+| Issue      | <description>         |
+| Root cause | <what was wrong>      |
+| Fix        | <what was changed>    |
+| Verified   | ✓                     |
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+<format>Follow ~/.claude/cgx/output-format.md</format>
 </process>
 CMD_EOF
 
@@ -555,37 +707,49 @@ CMD_EOF
 cat > "$CGX_COMMANDS/progress.md" << 'CMD_EOF'
 ---
 name: cgx:progress
-description: Progress + session management — dashboard, pause, or resume
+description: Progress dashboard + session management (--pause, --resume)
 argument-hint: "[--pause [notes]] [--resume]"
-allowed-tools: [Read, Write, Glob, Grep, Bash, Task, AskUserQuestion]
+allowed-tools: [Read, Write, Glob, Grep, Bash, AskUserQuestion]
 ---
 <objective>
-Project dashboard + session management. Replaces separate cgx:pause and cgx:resume.
-Default: show progress. Use --pause or --resume for session control.
+Show project progress using direct file reads. No skill delegation.
 </objective>
 <context>$ARGUMENTS</context>
 <process>
-## 1. If --pause:
-  a. Check for uncommitted changes — warn if exist
-  b. Pause (GSD): `Skill(skill="gsd:pause-work", args="$ARGUMENTS")`
-  c. Summary: Git log since session start, files changed, phases touched
-  d. Report: Handoff file location, resume instructions
-  → STOP HERE
+## If --pause:
+1. Check uncommitted changes: `git status`
+2. Write handoff file: `.planning/HANDOFF.md` with current context
+3. Show session summary (git log, files changed)
+→ STOP
 
-## 2. If --resume:
-  a. Restore (GSD): `Skill(skill="gsd:resume-work")`
-  b. Git scan: Check recent commits, uncommitted changes, branch status
-  c. Health (GSD): `Skill(skill="gsd:health")`
-  d. Progress: `Skill(skill="gsd:progress")` — where we left off
-  e. Suggest: Route to next action (plan, execute, fix, test)
-  → STOP HERE
+## If --resume:
+1. Read `.planning/HANDOFF.md` if exists
+2. Check `git status`, recent `git log`
+3. Read `.planning/STATE.md` for current phase
+4. Suggest next action
+→ STOP
 
-## 3. Default — Progress dashboard:
-  a. GSD: `Skill(skill="gsd:progress")`
-  b. Stats: `Skill(skill="gsd:stats")`
-  c. Kanban (CK): If plans exist, `Skill(skill="plans-kanban")`
-  d. Suggest next action based on progress
-<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
+## Default — Dashboard:
+1. Read `.planning/ROADMAP.md` → show phase table with status
+2. Read `.planning/STATE.md` → current phase
+3. Check `git log --oneline -10` → recent activity
+4. Check `git status` → uncommitted work
+5. Show dashboard:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Project Progress
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+| Phase | Name          | Status      |
+|-------|---------------|-------------|
+| 1     | Setup         | ✓ Done      |
+| 2     | Database      | ⟳ Building  |
+| 3     | API           | — Planned   |
+
+Current: Phase 2 | Git: clean
+→ Next: /cgx:execute 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+<format>Follow ~/.claude/cgx/output-format.md</format>
 </process>
 CMD_EOF
 
@@ -593,40 +757,49 @@ CMD_EOF
 cat > "$CGX_COMMANDS/review.md" << 'CMD_EOF'
 ---
 name: cgx:review
-description: Quality gate — review + test + simplify + verify in one command
-argument-hint: "<phase-number|file-path> [--test-only] [--simplify] [--coverage] [--e2e]"
+description: Quality gate — review + test + simplify + verify
+argument-hint: "<phase-number|file-path> [--test-only] [--simplify] [--coverage]"
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
 ---
 <objective>
-Unified quality gate. Replaces separate cgx:test and cgx:simplify.
-Default: review + test + verify. Use flags for specific modes.
+Quality checks with direct operations and Agent subagents.
 </objective>
 <context>$ARGUMENTS</context>
 <process>
-## 1. Determine scope: phase number → phase files, file path → specific file
+## Determine scope: phase number → find changed files, file path → specific file
 
-## 2. If --simplify:
-  a. Simplify (CK): `Skill(skill="simplify", args="$ARGUMENTS")`
-  b. Review simplified code (CK): Spawn code-reviewer
-  c. Test (CK): `Skill(skill="test", args="regression check")`
-  d. Commit (GSD): `Skill(skill="gsd:quick", args="refactor: simplify")`
-  e. Report: Lines reduced, complexity, test results
-  → STOP HERE
+## If --simplify:
+1. Read target files, identify simplification opportunities
+2. Apply simplifications using Edit tool
+3. Run tests via Bash
+4. Commit: `git commit -m "refactor: simplify"`
+5. Report table
+→ STOP
 
-## 3. If --test-only:
-  a. Generate tests if needed: `Skill(skill="gsd:add-tests", args="$ARGUMENTS")`
-  b. Run tests (CK): `Skill(skill="test", args="$ARGUMENTS")`
-  c. Coverage (if --coverage): Analyze coverage for scoped files
-  d. E2E (if --e2e): `Skill(skill="web-testing", args="e2e $ARGUMENTS")`
-  e. Report: Pass/fail, coverage %, untested areas
-  → STOP HERE
+## If --test-only:
+1. Run test suite via Bash
+2. Show pass/fail table
+3. If --coverage: analyze coverage output
+→ STOP
 
-## 4. Full review (default):
-  a. Review (CK): `Skill(skill="code-review", args="$ARGUMENTS")`
-  b. Test (CK): `Skill(skill="test", args="$ARGUMENTS")`
-  c. Verify (GSD): `Skill(skill="gsd:verify-work", args="$ARGUMENTS")`
-  d. Verdict: Review/Tests/Goal pass/fail table
-<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
+## Full review (default):
+1. Spawn code-reviewer Agent on changed files
+2. Fix critical issues from review
+3. Run tests via Bash
+4. Check phase success criteria from .planning/
+5. Report:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CGX:review — Results
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+| Check    | Status | Details         |
+|----------|--------|-----------------|
+| Review   | ✓ Pass | 0 critical      |
+| Tests    | ✓ Pass | 12/12           |
+| Criteria | ✓ Met  | 3/3             |
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+<format>Follow ~/.claude/cgx/output-format.md</format>
 </process>
 CMD_EOF
 
@@ -634,25 +807,35 @@ CMD_EOF
 cat > "$CGX_COMMANDS/autonomous.md" << 'CMD_EOF'
 ---
 name: cgx:autonomous
-description: Full auto — run all phases with CK quality gates at each step
+description: Full auto — loop plan + execute for all remaining phases
 argument-hint: "[--from N]"
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
 ---
 <objective>
-Auto-execute all remaining phases: cgx:plan → cgx:execute per phase.
-Pauses for blockers, validation, critical failures only.
+Auto-execute remaining phases. CGX stays in control — runs plan + execute inline.
 </objective>
 <context>$ARGUMENTS</context>
 <process>
-## 1. Check .planning/ exists
-## 2. Discover incomplete phases from ROADMAP.md
-## 3. Per phase loop:
-  - Plan if needed: `Skill(skill="cgx:plan", args="${N} --skip-discuss")`
-  - Execute with quality: `Skill(skill="cgx:execute", args="${N}")`
-  - Handle failures: fix + re-execute
-## 4. After all: `Skill(skill="gsd:audit-milestone")` → `Skill(skill="gsd:complete-milestone")`
-## 5. Report: Phases completed, quality gates status
-<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
+## 1. Read .planning/ROADMAP.md → find incomplete phases
+## 2. For each phase N (starting from --from or first incomplete):
+  a. Show: `⟳ Phase N: <name>`
+  b. Run plan steps inline (read context, create PLAN.md)
+  c. Run execute steps inline (build, review, test, verify)
+  d. Show phase result table
+  e. If failure: ask user to fix or skip
+## 3. After all phases: show final summary
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CGX:autonomous — Complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+| Phase | Name      | Status |
+|-------|-----------|--------|
+| 1     | Setup     | ✓ Done |
+| 2     | Database  | ✓ Done |
+| ...   | ...       | ...    |
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+<format>Follow ~/.claude/cgx/output-format.md</format>
 </process>
 CMD_EOF
 
@@ -660,30 +843,54 @@ CMD_EOF
 cat > "$CGX_COMMANDS/ui.md" << 'CMD_EOF'
 ---
 name: cgx:ui
-description: UI phase — GSD UI-SPEC + CK design intelligence + implementation
+description: UI phase — design spec + build + audit
 argument-hint: "<phase-number>"
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
 ---
 <objective>
-GSD ui-phase (UI-SPEC) → CK ui-ux-pro-max (design) → cgx:execute → GSD ui-review + CK web-design-guidelines.
+UI development with design-first approach. CGX stays in control.
 </objective>
 <context>Phase: $ARGUMENTS</context>
 <process>
-## 1. Design contract (GSD): `Skill(skill="gsd:ui-phase", args="$ARGUMENTS")`
-## 2. Design enhance (CK): `Skill(skill="ui-ux-pro-max", args="review Phase $ARGUMENTS UI-SPEC")`
-## 3. Build: `Skill(skill="cgx:execute", args="$ARGUMENTS")`
-## 4. Audit: `Skill(skill="gsd:ui-review", args="$ARGUMENTS")` + `Skill(skill="web-design-guidelines", args="Phase $ARGUMENTS")`
-## 5. Report: UI-SPEC/Design/Build/Audit status table
-<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
+## GUIDED PIPELINE
+
+### Step 1: Design Spec
+- Read phase plan from .planning/
+- Ask user about design preferences (style, colors, layout) via AskUserQuestion
+- Write UI-SPEC.md in .planning/phase-N/
+
+### Step 2: Build
+- Implement UI components using Edit/Write tools
+- Follow UI-SPEC.md specifications
+- Run dev server check via Bash
+
+### Step 3: Audit
+- Spawn code-reviewer Agent focused on UI quality
+- Check accessibility, responsive, performance
+
+### Step 4: Report
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CGX:ui Phase N — Complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+| Check        | Status | Score |
+|--------------|--------|-------|
+| Design spec  | ✓      | —     |
+| Build        | ✓      | —     |
+| Accessibility| ✓      | 95%   |
+| Responsive   | ✓      | Pass  |
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+<format>Follow ~/.claude/cgx/output-format.md</format>
 </process>
 CMD_EOF
 
-# Remove merged commands
+# Remove old merged commands
 rm -f "$CGX_COMMANDS/fix.md" "$CGX_COMMANDS/research.md" "$CGX_COMMANDS/test.md" \
       "$CGX_COMMANDS/simplify.md" "$CGX_COMMANDS/pause.md" "$CGX_COMMANDS/resume.md" \
       "$CGX_COMMANDS/clarify.md"
 
-# --- cgx:think ---
+# --- cgx:think --- (kept as-is — already uses AskUserQuestion directly)
 cat > "$CGX_COMMANDS/think.md" << 'CMD_EOF'
 ---
 name: cgx:think
@@ -692,138 +899,65 @@ argument-hint: "<topic or problem> [--quick] [--skip-clarify] [--no-log]"
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
 ---
 <objective>
-Full thinking pipeline: Clarify (target 100%) → Research (multi-source) → Brainstorm (trade-offs) → Strategic Vision.
-Use --quick for clarify-only mode (10+ questions → brief → route, no research).
-Produces a vision document with recommendations. Tracks all activities in session log.
+Full thinking pipeline. CGX stays in control — uses AskUserQuestion and Agent directly.
+Use --quick for clarify-only mode.
 </objective>
 <context>$ARGUMENTS</context>
 <process>
 ## Activity Log
-Throughout this command, maintain a running activity log. After EACH phase completes, append to the log and display it:
+Maintain running log after EACH phase:
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   CGX:think — Activity Log
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-| #  | Phase     | Status | Duration | Key Finding              |
-|----|-----------|--------|----------|--------------------------|
-| 1  | Clarify   | ✓ Done | 5 min    | 100% understanding       |
-| 2  | Research  | ✓ Done | 3 min    | 4 sources analyzed       |
-| 3  | Brainstorm| ⟳ Now  | —        | evaluating 3 approaches  |
-| 4  | Vision    | — Next | —        | —                        |
+| #  | Phase     | Status | Key Finding              |
+|----|-----------|--------|--------------------------|
+| 1  | Clarify   | ✓ Done | 100% understanding       |
+| 2  | Research  | ⟳ Now  | searching docs...        |
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 ## Quick Mode (--quick)
-If --quick flag: Run ONLY Phase 1 (Clarify), then output structured brief and route to next command. Skip research/brainstorm/vision.
+Run ONLY Phase 1 → output brief → route. Skip rest.
 
-## Phase 1: Clarify Target (skip if --skip-clarify)
-Goal: Reach 100% understanding of what user wants to achieve.
+## Phase 1: Clarify (skip if --skip-clarify)
+Ask questions via AskUserQuestion until 100% understanding:
+- Core problem/opportunity?
+- Success outcome?
+- Constraints (tech, time, team)?
+- Who benefits?
+- Prior attempts?
 
-Ask targeted questions in batches using AskUserQuestion:
-- What is the core problem or opportunity?
-- What outcome would make this a success?
-- What constraints exist (tech, time, budget, team)?
-- Who benefits and how?
-- What has been tried before? What failed?
-
-After each answer, show understanding %:
-```
-Target Understanding: 78% ███████████████████░░░░
-✓ Problem: clear
-✓ Outcome: clear
-✗ Constraints: need more
-✗ Prior attempts: unknown
-```
-
-Keep asking until 100%. Then summarize the target in 3 bullets.
+Show understanding % bar after each answer. Keep asking until 100%.
 
 ## Phase 2: Research
-Using the clarified target, conduct multi-source research:
-
-a. Docs lookup: `Skill(skill="docs-seeker", args="<target topic>")`
-b. Deep research: Spawn 1-2 researcher agents for:
-   - Current best practices and industry standards
-   - Similar implementations and case studies
-   - Potential technologies and approaches
-c. Codebase scan: If relevant, scan current project for related code/patterns
-
-Output as table:
-```
-| Source         | Finding                          | Relevance |
-|----------------|----------------------------------|-----------|
-| docs-seeker    | Next.js 15 supports X natively   | High      |
-| researcher-1   | Company Y solved this with Z     | Medium    |
-| codebase       | Existing auth module reusable    | High      |
-```
+- Spawn 1-2 researcher Agents (via Agent tool) for:
+  - Latest docs and best practices
+  - Similar implementations
+- Scan codebase with Glob/Grep for related code
+- Output findings table
 
 ## Phase 3: Brainstorm
-Using research findings, generate and evaluate approaches:
+- Generate 3 approaches based on research
+- Evaluate each: pros, cons, effort, risk
+- Output comparison table
 
-`Skill(skill="brainstorm", args="<target> with research context")`
-`Skill(skill="sequential-thinking", args="evaluate approaches for <target>")`
+## Phase 4: Vision
+Write strategic vision document:
+- Target summary
+- Recommended approach + rationale
+- Implementation roadmap table (5-8 phases max)
+- Key risks + mitigations
+- Success metrics
 
-Output as comparison table:
+Save to plans/reports/ unless --no-log.
+
+## Phase 5: Final Log
+Show complete activity log + artifacts.
 ```
-| Approach       | Pros              | Cons              | Effort | Risk  |
-|----------------|-------------------|-------------------|--------|-------|
-| Option A       | Fast, proven      | Limited scale     | Low    | Low   |
-| Option B       | Scalable, modern  | Complex setup     | High   | Med   |
-| Option C       | Balanced          | New dependency    | Med    | Low   |
+→ Next: /cgx:plan <phase>
 ```
-
-## Phase 4: Strategic Vision
-Synthesize everything into a vision document:
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Strategic Vision: <topic>
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-TARGET
-  <1-2 sentences from clarify phase>
-
-RECOMMENDED APPROACH
-  <chosen option with rationale>
-
-IMPLEMENTATION ROADMAP
-  | Phase | What                    | Effort | Priority |
-  |-------|-------------------------|--------|----------|
-  | 1     | ...                     | ...    | ...      |
-  | 2     | ...                     | ...    | ...      |
-
-KEY RISKS & MITIGATIONS
-  | Risk           | Mitigation              |
-  |----------------|-------------------------|
-  | ...            | ...                     |
-
-SUCCESS METRICS
-  - Metric 1: ...
-  - Metric 2: ...
-
-→ Next: /cgx:plan <phase> or /cgx:execute
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-Save vision document to plans/reports/ if --no-log is NOT set.
-
-## Phase 5: Final Activity Log
-Display complete activity log with all phases:
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  CGX:think — Complete
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-| #  | Phase      | Status | Key Output                |
-|----|------------|--------|---------------------------|
-| 1  | Clarify    | ✓ Done | 100% — 8 questions asked  |
-| 2  | Research   | ✓ Done | 4 sources, 6 findings     |
-| 3  | Brainstorm | ✓ Done | 3 options evaluated       |
-| 4  | Vision     | ✓ Done | Approach B recommended    |
-
-Artifacts:
-  → plans/reports/think-260319-<topic>.md
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
+<format>Follow ~/.claude/cgx/output-format.md</format>
 </process>
 CMD_EOF
 
@@ -831,21 +965,44 @@ CMD_EOF
 cat > "$CGX_COMMANDS/docs.md" << 'CMD_EOF'
 ---
 name: cgx:docs
-description: Documentation management — CK docs analysis + GSD project docs sync
+description: Documentation sync — analyze codebase + update docs/
 argument-hint: "[init|update|sync|summary]"
-allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
+allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, AskUserQuestion]
 ---
 <objective>
-Unified docs: CK docs (codebase analysis) + GSD project docs (.planning/) + ./docs/ sync.
+Manage docs/ directory using direct file operations.
 </objective>
 <context>$ARGUMENTS</context>
 <process>
-## 1. Detect action: init (first time), update (after changes), sync (align docs), summary (overview)
-## 2. Analyze (CK): `Skill(skill="docs", args="$ARGUMENTS")`
-## 3. GSD context: Read .planning/PROJECT.md, ROADMAP.md for project state
-## 4. Sync: Update ./docs/ files (architecture, roadmap, changelog) from current codebase + GSD state
-## 5. Report: Files updated, coverage gaps, stale docs flagged
-<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
+## 1. Detect action
+- init: Create docs/ structure from scratch
+- update: Update based on recent code changes
+- sync: Align docs/ with .planning/ state
+- summary: Show docs coverage overview
+
+## 2. Analyze
+- Read existing docs/ files
+- Scan codebase structure (Glob)
+- Read .planning/ files if exist
+- Identify gaps between code and docs
+
+## 3. Update
+- Write/Edit docs files directly
+- Update architecture, changelog, roadmap as needed
+
+## 4. Report
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CGX:docs — Complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+| File                | Status  |
+|---------------------|---------|
+| system-architecture | ✓ Updated|
+| project-changelog   | ✓ Updated|
+| code-standards      | — Skip   |
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+<format>Follow ~/.claude/cgx/output-format.md</format>
 </process>
 CMD_EOF
 
