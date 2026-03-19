@@ -54,7 +54,7 @@ CGX_COMMANDS="$HOME/.claude/commands/cgx"
 CK_SKILLS="$HOME/.claude/skills"
 GSD_DIR="$HOME/.claude/get-shit-done"
 GSD_COMMANDS="$HOME/.claude/commands/gsd"
-CGX_VERSION="0.6.0"
+CGX_VERSION="0.7.0"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Uninstall
@@ -328,8 +328,7 @@ WORKFLOW (use in order)
   /cgx:autonomous       Full auto with CK quality gates per phase
 
 DISCOVERY
-  /cgx:clarify <desc>   10+ questions until 100% understanding
-  /cgx:think <topic>    Clarify → Research → Brainstorm → Strategic Vision
+  /cgx:think <topic>    Clarify → Research → Brainstorm → Vision (--quick for clarify only)
 
 QUICK ACCESS
   /cgx:do <text>        Smart router — auto-route to best command
@@ -404,7 +403,7 @@ Check `.planning/` existence.
 Route by first match:
 | Text describes... | Route |
 |-------------------|-------|
-| Unclear, vague, need to discuss | `/cgx:clarify` |
+| Unclear, vague, need to discuss | `/cgx:think --quick` |
 | Strategy, vision, big picture, evaluate | `/cgx:think` |
 | New project, setup, initialize | `/cgx:new` |
 | Bug fix, quick error, broken | `/cgx:fix` |
@@ -681,125 +680,20 @@ CMD_EOF
 
 # Remove merged commands
 rm -f "$CGX_COMMANDS/fix.md" "$CGX_COMMANDS/research.md" "$CGX_COMMANDS/test.md" \
-      "$CGX_COMMANDS/simplify.md" "$CGX_COMMANDS/pause.md" "$CGX_COMMANDS/resume.md"
-
-# --- cgx:clarify ---
-cat > "$CGX_COMMANDS/clarify.md" << 'CMD_EOF'
----
-name: cgx:clarify
-description: Deep requirement clarification — ask 10+ questions until 100% understanding before action
-argument-hint: "<what you want to do or problem description>"
-allowed-tools: [Read, Glob, Grep, Bash, AskUserQuestion]
----
-<objective>
-Interview the user with targeted questions to reach 100% understanding before any implementation.
-Minimum 10 questions. Show understanding % after each answer. Keep asking until 100%.
-</objective>
-<context>$ARGUMENTS</context>
-<process>
-## Protocol
-
-You are a senior technical consultant. Your job is to FULLY understand what the user needs before ANY work begins.
-
-### Step 1: Initial Analysis
-Read the user's description. Identify:
-- What is clear vs ambiguous
-- Missing technical details
-- Unstated assumptions
-- Scope boundaries unclear
-- Success criteria undefined
-
-Calculate initial understanding % based on how complete the description is.
-Display: `Understanding: XX% — need more clarity on: [list gaps]`
-
-### Step 2: Question Rounds (minimum 10 questions)
-
-Ask questions in batches of 3-5 using AskUserQuestion. Each batch targets different dimensions:
-
-**Round 1 — Problem/Goal (Q1-3):**
-- What exactly is the problem or desired outcome?
-- What triggered this need? (bug report, feature request, tech debt, user feedback)
-- What does "done" look like? How will you verify success?
-
-**Round 2 — Scope & Constraints (Q4-6):**
-- What files/modules/areas are involved?
-- What should NOT be changed? (boundaries, dependencies, APIs)
-- Any deadlines, performance requirements, or tech constraints?
-
-**Round 3 — Context & Dependencies (Q7-9):**
-- Who are the end users? What's their workflow?
-- Are there related features, existing implementations, or prior attempts?
-- Any external systems, APIs, or services involved?
-
-**Round 4 — Edge Cases & Risks (Q10+):**
-- What could go wrong? Known edge cases?
-- Any security, accessibility, or compliance concerns?
-- What's the rollback plan if this doesn't work?
-
-After EACH user response, update the understanding %:
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Understanding: 73% ████████████████░░░░░░
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ Problem: clear
-✓ Goal: clear
-✓ Scope: clear
-✗ Edge cases: need more info
-✗ Success criteria: vague
-✗ Dependencies: unknown
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-### Understanding % Calculation
-Score each dimension (0-100), then average:
-- Problem definition: __%
-- Desired outcome: __%
-- Scope boundaries: __%
-- Technical constraints: __%
-- Success criteria: __%
-- Edge cases & risks: __%
-- Context & dependencies: __%
-- User/stakeholder needs: __%
-- Priority & timeline: __%
-- Rollback/safety: __%
-
-### Step 3: Keep Asking Until 100%
-- If any dimension < 80%: ask targeted follow-ups for that dimension
-- If understanding >= 90% but < 100%: ask 2-3 final precision questions
-- NEVER stop below 100%
-
-### Step 4: Summary & Route
-When 100% reached, output:
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Understanding: 100% ██████████████████████
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-Then produce a structured brief:
-- **Problem:** 1-2 sentences
-- **Goal:** what success looks like
-- **Scope:** files/modules involved, boundaries
-- **Constraints:** tech, performance, timeline
-- **Edge cases:** identified risks
-- **Success criteria:** how to verify done
-- **Recommended approach:** which cgx command to use next
-
-Ask user: "Ready to proceed with `/cgx:<recommended>`?"
-<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
-</process>
-CMD_EOF
+      "$CGX_COMMANDS/simplify.md" "$CGX_COMMANDS/pause.md" "$CGX_COMMANDS/resume.md" \
+      "$CGX_COMMANDS/clarify.md"
 
 # --- cgx:think ---
 cat > "$CGX_COMMANDS/think.md" << 'CMD_EOF'
 ---
 name: cgx:think
-description: Deep thinking — clarify target → research → brainstorm → strategic vision with activity log
-argument-hint: "<topic or problem> [--skip-clarify] [--no-log]"
+description: Deep thinking — clarify (100%) → research → brainstorm → strategic vision
+argument-hint: "<topic or problem> [--quick] [--skip-clarify] [--no-log]"
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
 ---
 <objective>
 Full thinking pipeline: Clarify (target 100%) → Research (multi-source) → Brainstorm (trade-offs) → Strategic Vision.
+Use --quick for clarify-only mode (10+ questions → brief → route, no research).
 Produces a vision document with recommendations. Tracks all activities in session log.
 </objective>
 <context>$ARGUMENTS</context>
@@ -818,6 +712,9 @@ Throughout this command, maintain a running activity log. After EACH phase compl
 | 4  | Vision    | — Next | —        | —                        |
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
+
+## Quick Mode (--quick)
+If --quick flag: Run ONLY Phase 1 (Clarify), then output structured brief and route to next command. Skip research/brainstorm/vision.
 
 ## Phase 1: Clarify Target (skip if --skip-clarify)
 Goal: Reach 100% understanding of what user wants to achieve.
@@ -952,7 +849,7 @@ Unified docs: CK docs (codebase analysis) + GSD project docs (.planning/) + ./do
 </process>
 CMD_EOF
 
-echo -e "  ${GREEN}✓${NC} 16 commands installed"
+echo -e "  ${GREEN}✓${NC} 15 commands installed"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Step 6: Install CGX auto-routing rules
@@ -970,7 +867,7 @@ Match user intent → invoke the CGX command via `Skill(skill="cgx:<cmd>")`:
 
 | User says / intent                                    | Invoke                          |
 |-------------------------------------------------------|---------------------------------|
-| Unclear request, vague, "I want to..."                | `Skill(skill="cgx:clarify")`    |
+| Unclear request, vague, "I want to..."                | `Skill(skill="cgx:think", args="--quick")`  |
 | Strategy, vision, evaluate options, big picture       | `Skill(skill="cgx:think")`      |
 | New project, start fresh, initialize                  | `Skill(skill="cgx:new")`        |
 | Plan, design, architect, research approach            | `Skill(skill="cgx:plan")`       |
@@ -1077,7 +974,7 @@ echo ""
 echo -e "  Mode: ${BOLD}${MODE}${NC}"
 echo -e "  CK:   $([ "$CK_FOUND" = true ] && echo -e "${GREEN}✓ ${CK_SKILL_COUNT} skills${NC}" || echo -e "${YELLOW}✗ Missing${NC}")"
 echo -e "  GSD:  $([ "$GSD_FOUND" = true ] && echo -e "${GREEN}✓ v${GSD_VERSION}${NC}" || echo -e "${YELLOW}✗ Missing${NC}")"
-echo -e "  CGX:  ${GREEN}✓ 16 commands${NC}"
+echo -e "  CGX:  ${GREEN}✓ 15 commands${NC}"
 echo ""
 echo -e "  ${BOLD}Usage:${NC}"
 echo -e "    /cgx:help       — Show all commands"
