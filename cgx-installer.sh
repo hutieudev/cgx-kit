@@ -89,6 +89,10 @@ mkdir -p "$CGX_DIR" "$CGX_COMMANDS"
 echo -e "  ${GREEN}✓${NC} $CGX_DIR"
 echo -e "  ${GREEN}✓${NC} $CGX_COMMANDS"
 
+# Copy installer to CGX dir for self-reference
+cp "$0" "$CGX_DIR/install.sh" 2>/dev/null || true
+chmod +x "$CGX_DIR/install.sh" 2>/dev/null || true
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Step 2: Write runtime utilities
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -141,7 +145,7 @@ GSD_VERSION="unknown"
 GSD_COMMAND_COUNT=0
 if [ -d "$GSD_DIR" ] && [ -f "$GSD_DIR/VERSION" ]; then
   GSD_VERSION=$(cat "$GSD_DIR/VERSION" 2>/dev/null || echo "unknown")
-  GSD_COMMAND_COUNT=$(ls "$GSD_COMMANDS"/*.md 2>/dev/null | wc -l | tr -d ' ')
+  GSD_COMMAND_COUNT=$(find "$GSD_COMMANDS" -maxdepth 1 -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
   GSD_FOUND=true
   echo -e "  ${GREEN}✓${NC} GSD v${GSD_VERSION} — ${GSD_COMMAND_COUNT} commands"
 else
@@ -160,7 +164,7 @@ if [ "$FETCH_GSD" = true ]; then
   npx -y get-shit-done-cc@latest --claude --global 2>&1 | tail -3
   if [ -f "$GSD_DIR/VERSION" ]; then
     GSD_VERSION=$(cat "$GSD_DIR/VERSION")
-    GSD_COMMAND_COUNT=$(ls "$GSD_COMMANDS"/*.md 2>/dev/null | wc -l | tr -d ' ')
+    GSD_COMMAND_COUNT=$(find "$GSD_COMMANDS" -maxdepth 1 -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
     GSD_FOUND=true
     echo -e "  ${GREEN}✓${NC} GSD installed → v${GSD_VERSION}"
   fi
