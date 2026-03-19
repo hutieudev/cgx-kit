@@ -65,31 +65,26 @@ Then in Claude Code:
 ### Quick Access
 | Command | Pipeline |
 |---------|----------|
-| `/cgx:do <text>` | Smart router — describe what you want |
-| `/cgx:quick <task>` | CK fix/cook → GSD quick → CK review |
-| `/cgx:fix <bug>` | CK fix → implement → GSD atomic commit → CK test |
+| `/cgx:do <text>` | Smart router — auto-route to best command |
+| `/cgx:quick <task>` | Auto-detect bug/feature → CK fix/cook → GSD commit → CK test |
 | `/cgx:debug <issue>` | CK debug → CK sequential-thinking → GSD debug → CK test |
 
 ### Quality
 | Command | Pipeline |
 |---------|----------|
-| `/cgx:review <phase>` | CK code-review → CK test → GSD verify-work |
-| `/cgx:test <phase>` | GSD add-tests → CK test → coverage analysis |
-| `/cgx:simplify [path]` | CK simplify → CK review → CK test → GSD commit |
+| `/cgx:review <phase>` | Review + test + verify. Flags: `--test-only`, `--simplify`, `--coverage`, `--e2e` |
 | `/cgx:ui <phase>` | GSD UI-SPEC → CK ui-ux-pro-max → build → GSD ui-review |
 
-### Research & Docs
+### Knowledge
 | Command | Pipeline |
 |---------|----------|
-| `/cgx:research <topic>` | CK docs-seeker → CK researcher → CK brainstorm → report |
+| `/cgx:plan <phase>` | Research + plan. Flag: `--research-only` for standalone research |
 | `/cgx:docs [action]` | CK docs → GSD project state → ./docs/ sync |
 
 ### Session
 | Command | Pipeline |
 |---------|----------|
-| `/cgx:progress` | GSD progress + stats + CK kanban |
-| `/cgx:pause [notes]` | GSD pause-work → session summary |
-| `/cgx:resume` | GSD resume-work → git scan → next action |
+| `/cgx:progress` | Dashboard + session. Flags: `--pause [notes]`, `--resume` |
 
 ## How It Works
 
