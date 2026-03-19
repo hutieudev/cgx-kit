@@ -84,3 +84,9 @@ external/
 
 # Git worktrees (local development only)
 worktrees/
+
+# Local tool configs
+.claude/
+.opencode/
+.repomixignore
+release-manifest.json
