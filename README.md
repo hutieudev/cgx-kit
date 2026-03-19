@@ -61,6 +61,7 @@ Then in Claude Code:
 | Command | Pipeline |
 |---------|----------|
 | `/cgx:clarify <desc>` | 10+ targeted questions → understanding % bar → structured brief → route |
+| `/cgx:think <topic>` | Clarify → Research → Brainstorm → Strategic Vision + activity log |
 
 ### Quick Access
 | Command | Pipeline |

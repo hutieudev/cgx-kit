@@ -54,7 +54,7 @@ CGX_COMMANDS="$HOME/.claude/commands/cgx"
 CK_SKILLS="$HOME/.claude/skills"
 GSD_DIR="$HOME/.claude/get-shit-done"
 GSD_COMMANDS="$HOME/.claude/commands/gsd"
-CGX_VERSION="0.4.1"
+CGX_VERSION="0.5.0"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Uninstall
@@ -324,6 +324,7 @@ WORKFLOW (use in order)
 
 DISCOVERY
   /cgx:clarify <desc>   10+ questions until 100% understanding
+  /cgx:think <topic>    Clarify → Research → Brainstorm → Strategic Vision
 
 QUICK ACCESS
   /cgx:do <text>        Smart router — auto-route to best command
@@ -399,6 +400,7 @@ Route by first match:
 | Text describes... | Route |
 |-------------------|-------|
 | Unclear, vague, need to discuss | `/cgx:clarify` |
+| Strategy, vision, big picture, evaluate | `/cgx:think` |
 | New project, setup, initialize | `/cgx:new` |
 | Bug fix, quick error, broken | `/cgx:fix` |
 | Complex bug, crash, investigate | `/cgx:debug` |
@@ -783,6 +785,146 @@ Ask user: "Ready to proceed with `/cgx:<recommended>`?"
 </process>
 CMD_EOF
 
+# --- cgx:think ---
+cat > "$CGX_COMMANDS/think.md" << 'CMD_EOF'
+---
+name: cgx:think
+description: Deep thinking — clarify target → research → brainstorm → strategic vision with activity log
+argument-hint: "<topic or problem> [--skip-clarify] [--no-log]"
+allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
+---
+<objective>
+Full thinking pipeline: Clarify (target 100%) → Research (multi-source) → Brainstorm (trade-offs) → Strategic Vision.
+Produces a vision document with recommendations. Tracks all activities in session log.
+</objective>
+<context>$ARGUMENTS</context>
+<process>
+## Activity Log
+Throughout this command, maintain a running activity log. After EACH phase completes, append to the log and display it:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CGX:think — Activity Log
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+| #  | Phase     | Status | Duration | Key Finding              |
+|----|-----------|--------|----------|--------------------------|
+| 1  | Clarify   | ✓ Done | 5 min    | 100% understanding       |
+| 2  | Research  | ✓ Done | 3 min    | 4 sources analyzed       |
+| 3  | Brainstorm| ⟳ Now  | —        | evaluating 3 approaches  |
+| 4  | Vision    | — Next | —        | —                        |
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+## Phase 1: Clarify Target (skip if --skip-clarify)
+Goal: Reach 100% understanding of what user wants to achieve.
+
+Ask targeted questions in batches using AskUserQuestion:
+- What is the core problem or opportunity?
+- What outcome would make this a success?
+- What constraints exist (tech, time, budget, team)?
+- Who benefits and how?
+- What has been tried before? What failed?
+
+After each answer, show understanding %:
+```
+Target Understanding: 78% ███████████████████░░░░
+✓ Problem: clear
+✓ Outcome: clear
+✗ Constraints: need more
+✗ Prior attempts: unknown
+```
+
+Keep asking until 100%. Then summarize the target in 3 bullets.
+
+## Phase 2: Research
+Using the clarified target, conduct multi-source research:
+
+a. Docs lookup: `Skill(skill="docs-seeker", args="<target topic>")`
+b. Deep research: Spawn 1-2 researcher agents for:
+   - Current best practices and industry standards
+   - Similar implementations and case studies
+   - Potential technologies and approaches
+c. Codebase scan: If relevant, scan current project for related code/patterns
+
+Output as table:
+```
+| Source         | Finding                          | Relevance |
+|----------------|----------------------------------|-----------|
+| docs-seeker    | Next.js 15 supports X natively   | High      |
+| researcher-1   | Company Y solved this with Z     | Medium    |
+| codebase       | Existing auth module reusable    | High      |
+```
+
+## Phase 3: Brainstorm
+Using research findings, generate and evaluate approaches:
+
+`Skill(skill="brainstorm", args="<target> with research context")`
+`Skill(skill="sequential-thinking", args="evaluate approaches for <target>")`
+
+Output as comparison table:
+```
+| Approach       | Pros              | Cons              | Effort | Risk  |
+|----------------|-------------------|-------------------|--------|-------|
+| Option A       | Fast, proven      | Limited scale     | Low    | Low   |
+| Option B       | Scalable, modern  | Complex setup     | High   | Med   |
+| Option C       | Balanced          | New dependency    | Med    | Low   |
+```
+
+## Phase 4: Strategic Vision
+Synthesize everything into a vision document:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Strategic Vision: <topic>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TARGET
+  <1-2 sentences from clarify phase>
+
+RECOMMENDED APPROACH
+  <chosen option with rationale>
+
+IMPLEMENTATION ROADMAP
+  | Phase | What                    | Effort | Priority |
+  |-------|-------------------------|--------|----------|
+  | 1     | ...                     | ...    | ...      |
+  | 2     | ...                     | ...    | ...      |
+
+KEY RISKS & MITIGATIONS
+  | Risk           | Mitigation              |
+  |----------------|-------------------------|
+  | ...            | ...                     |
+
+SUCCESS METRICS
+  - Metric 1: ...
+  - Metric 2: ...
+
+→ Next: /cgx:plan <phase> or /cgx:execute
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+Save vision document to plans/reports/ if --no-log is NOT set.
+
+## Phase 5: Final Activity Log
+Display complete activity log with all phases:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CGX:think — Complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+| #  | Phase      | Status | Key Output                |
+|----|------------|--------|---------------------------|
+| 1  | Clarify    | ✓ Done | 100% — 8 questions asked  |
+| 2  | Research   | ✓ Done | 4 sources, 6 findings     |
+| 3  | Brainstorm | ✓ Done | 3 options evaluated       |
+| 4  | Vision     | ✓ Done | Approach B recommended    |
+
+Artifacts:
+  → plans/reports/think-260319-<topic>.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
+</process>
+CMD_EOF
+
 # --- cgx:docs ---
 cat > "$CGX_COMMANDS/docs.md" << 'CMD_EOF'
 ---
@@ -805,7 +947,7 @@ Unified docs: CK docs (codebase analysis) + GSD project docs (.planning/) + ./do
 </process>
 CMD_EOF
 
-echo -e "  ${GREEN}✓${NC} 15 commands installed"
+echo -e "  ${GREEN}✓${NC} 16 commands installed"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Step 6: Write config
@@ -851,7 +993,7 @@ echo ""
 echo -e "  Mode: ${BOLD}${MODE}${NC}"
 echo -e "  CK:   $([ "$CK_FOUND" = true ] && echo -e "${GREEN}✓ ${CK_SKILL_COUNT} skills${NC}" || echo -e "${YELLOW}✗ Missing${NC}")"
 echo -e "  GSD:  $([ "$GSD_FOUND" = true ] && echo -e "${GREEN}✓ v${GSD_VERSION}${NC}" || echo -e "${YELLOW}✗ Missing${NC}")"
-echo -e "  CGX:  ${GREEN}✓ 15 commands${NC}"
+echo -e "  CGX:  ${GREEN}✓ 16 commands${NC}"
 echo ""
 echo -e "  ${BOLD}Usage:${NC}"
 echo -e "    /cgx:help       — Show all commands"
