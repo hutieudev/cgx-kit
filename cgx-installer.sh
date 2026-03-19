@@ -54,7 +54,7 @@ CGX_COMMANDS="$HOME/.claude/commands/cgx"
 CK_SKILLS="$HOME/.claude/skills"
 GSD_DIR="$HOME/.claude/get-shit-done"
 GSD_COMMANDS="$HOME/.claude/commands/gsd"
-CGX_VERSION="0.4.0"
+CGX_VERSION="0.4.1"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Uninstall
@@ -124,6 +124,64 @@ if (flag === '--json') {
 }
 UTILEOF
 echo -e "  ${GREEN}✓${NC} check-prerequisites.cjs"
+
+# output-format.md — shared output guidelines for all CGX commands
+cat > "$CGX_DIR/output-format.md" << 'FMTEOF'
+# CGX Output Format Guidelines
+
+ALL CGX command outputs MUST follow these rules:
+
+## 1. Use Tables for Multi-Item Results
+```
+| Step     | Status   | Details             |
+|----------|----------|---------------------|
+| Review   | ✓ Pass   | 3 issues fixed      |
+| Test     | ✓ Pass   | 85% coverage        |
+| Verify   | ✓ Pass   | Goal achieved       |
+```
+
+## 2. Use Progress Bars for % Values
+```
+Understanding: 73% ████████████████░░░░░░
+Coverage:      85% █████████████████████░
+```
+
+## 3. Use Status Icons
+- ✓ = passed/done/yes
+- ✗ = failed/no
+- ⟳ = in progress
+- ⚠ = warning
+- → = next action
+
+## 4. Use Section Headers with Lines
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Section Title
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+## 5. Keep Text Minimal
+- Lead with data, not prose
+- One-line summaries, not paragraphs
+- Use `key: value` format for properties
+- List actions as `→ /cgx:next-command`
+
+## 6. Report Template
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CGX:<command> — Result
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+| Step      | Status | Details    |
+|-----------|--------|------------|
+| ...       | ✓/✗    | ...        |
+
+Summary: <one line>
+→ Next: /cgx:<suggested>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+FMTEOF
+echo -e "  ${GREEN}✓${NC} output-format.md"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Step 3: Detect CK + GSD
@@ -233,6 +291,7 @@ bash "$HOME/.claude/cgx/install.sh"
 node "$HOME/.claude/cgx/check-prerequisites.cjs" --json
 ```
 Report the detected mode. Show available commands with `/cgx:help`.
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
 
@@ -286,6 +345,7 @@ HOW IT WORKS
   GSD provides: project state, roadmap, phases, wave execution, atomic commits
   CK  provides: research, cook, code-review, test, debug, docs-seeker, ui-ux
 ```
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
 
@@ -318,6 +378,7 @@ bash "$HOME/.claude/cgx/install.sh" --fetch-ck
 bash "$HOME/.claude/cgx/install.sh"
 ```
 Display before/after versions. Remind to restart session.
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
 
@@ -356,6 +417,7 @@ Route by first match:
 | Small specific task | `/cgx:quick` |
 If ambiguous: ask user with top 2-3 options.
 Invoke matched command via `Skill(skill="cgx:<match>", args="...")`.
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
 
@@ -383,6 +445,7 @@ Replaces separate cgx:research. All research capabilities built in.
 ## 4. If --research-only: Stop here. Output consolidated research report.
 ## 5. Plan (GSD): `Skill(skill="gsd:plan-phase", args="${PHASE}")`
 ## 6. Report: Step statuses. Next: `/cgx:execute ${PHASE}`
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
 
@@ -406,6 +469,7 @@ Pipeline: CK cook pre-check → GSD execute-phase → CK code-review → CK test
 ## 5. Test (CK): Spawn tester agent. Skip if --skip-test. Fix failures before proceeding.
 ## 6. Verify (GSD): `Skill(skill="gsd:verify-work", args="${PHASE}")`
 ## 7. Report: Step statuses table. Next: `/cgx:progress`
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
 
@@ -434,6 +498,7 @@ Replaces separate cgx:fix. Use --fix to force bug mode, --feature for feature mo
 ## 5. Commit (GSD): `Skill(skill="gsd:quick", args="$ARGUMENTS")`
 ## 6. Verify (unless --no-test): `Skill(skill="test", args="regression check")`
 ## 7. Report: Mode (bug/feature), CK skill used, commit hash, test result
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
 
@@ -455,6 +520,7 @@ CK debug (root cause) + CK sequential-thinking → GSD debug (checkpoints) → C
 ## 3. Fix (GSD): `Skill(skill="gsd:debug", args="$ARGUMENTS")` — persistent DEBUG.md + checkpoints
 ## 4. Verify (CK): Spawn tester to confirm fix
 ## 5. Report: Root cause, fix, test result
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
 
@@ -475,6 +541,7 @@ CK bootstrap (tech research) → GSD new-project (lifecycle) → CK docs init.
 ## 2. Project setup (GSD): `Skill(skill="gsd:new-project", args="$ARGUMENTS")`
 ## 3. Docs init (CK): `Skill(skill="docs", args="init")`
 ## 4. Report: GSD .planning/ + CK docs/ ready. Next: `/cgx:plan 1`
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
 
@@ -512,6 +579,7 @@ Default: show progress. Use --pause or --resume for session control.
   b. Stats: `Skill(skill="gsd:stats")`
   c. Kanban (CK): If plans exist, `Skill(skill="plans-kanban")`
   d. Suggest next action based on progress
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
 
@@ -552,6 +620,7 @@ Default: review + test + verify. Use flags for specific modes.
   b. Test (CK): `Skill(skill="test", args="$ARGUMENTS")`
   c. Verify (GSD): `Skill(skill="gsd:verify-work", args="$ARGUMENTS")`
   d. Verdict: Review/Tests/Goal pass/fail table
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
 
@@ -577,6 +646,7 @@ Pauses for blockers, validation, critical failures only.
   - Handle failures: fix + re-execute
 ## 4. After all: `Skill(skill="gsd:audit-milestone")` → `Skill(skill="gsd:complete-milestone")`
 ## 5. Report: Phases completed, quality gates status
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
 
@@ -598,6 +668,7 @@ GSD ui-phase (UI-SPEC) → CK ui-ux-pro-max (design) → cgx:execute → GSD ui-
 ## 3. Build: `Skill(skill="cgx:execute", args="$ARGUMENTS")`
 ## 4. Audit: `Skill(skill="gsd:ui-review", args="$ARGUMENTS")` + `Skill(skill="web-design-guidelines", args="Phase $ARGUMENTS")`
 ## 5. Report: UI-SPEC/Design/Build/Audit status table
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
 
@@ -708,6 +779,7 @@ Then produce a structured brief:
 - **Recommended approach:** which cgx command to use next
 
 Ask user: "Ready to proceed with `/cgx:<recommended>`?"
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
 
@@ -729,6 +801,7 @@ Unified docs: CK docs (codebase analysis) + GSD project docs (.planning/) + ./do
 ## 3. GSD context: Read .planning/PROJECT.md, ROADMAP.md for project state
 ## 4. Sync: Update ./docs/ files (architecture, roadmap, changelog) from current codebase + GSD state
 ## 5. Report: Files updated, coverage gaps, stale docs flagged
+<format>Follow ~/.claude/cgx/output-format.md — use tables, status icons, progress bars. No prose paragraphs.</format>
 </process>
 CMD_EOF
 
