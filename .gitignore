@@ -17,7 +17,7 @@
 /.next/
 /out/
 dist/
-bin/
+# bin/ — kept for cgx npm package
 
 # production
 /build

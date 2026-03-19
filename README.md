@@ -22,11 +22,14 @@ CGX merges [ClaudeKit](https://github.com/anthropics/claudekit) (CK) skills with
 ## Quick Start
 
 ```bash
-# Install CGX (requires CK or GSD already installed)
-bash cgx-installer.sh
+# One-liner install (recommended)
+npx cgx-kit
 
-# Install CGX + auto-fetch both CK & GSD
-bash cgx-installer.sh --fetch-latest
+# Install + auto-fetch both CK & GSD
+npx cgx-kit --fetch-latest
+
+# Or curl directly
+bash <(curl -fsSL https://raw.githubusercontent.com/hutieudev/cgx-kit/main/cgx-installer.sh)
 ```
 
 Then in Claude Code:
@@ -126,20 +129,19 @@ CGX is a **thin orchestration layer** — it never duplicates logic. Each comman
 ### Install Options
 
 ```bash
-# Detect-only (CK and/or GSD must already be installed)
-bash cgx-installer.sh
+# Via npm (recommended — works from any directory)
+npx cgx-kit                    # Detect-only
+npx cgx-kit --fetch-latest     # Auto-fetch CK + GSD
+npx cgx-kit --fetch-gsd        # Fetch only GSD
+npx cgx-kit --fetch-ck         # Fetch only CK dependencies
+npx cgx-kit --uninstall        # Remove CGX (CK and GSD untouched)
 
-# Auto-fetch everything
-bash cgx-installer.sh --fetch-latest
+# Via curl
+bash <(curl -fsSL https://raw.githubusercontent.com/hutieudev/cgx-kit/main/cgx-installer.sh)
 
-# Fetch only GSD
-bash cgx-installer.sh --fetch-gsd
-
-# Fetch only CK dependencies
-bash cgx-installer.sh --fetch-ck
-
-# Uninstall CGX (CK and GSD are untouched)
-bash cgx-installer.sh --uninstall
+# Or clone + run
+git clone https://github.com/hutieudev/cgx-kit.git /tmp/cgx-kit
+bash /tmp/cgx-kit/cgx-installer.sh --fetch-latest
 ```
 
 ### What Gets Installed
