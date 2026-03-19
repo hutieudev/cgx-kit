@@ -66,7 +66,7 @@ Then in Claude Code:
 | Command | Pipeline |
 |---------|----------|
 | `/cgx:do <text>` | Smart router — auto-route to best command |
-| `/cgx:quick <task>` | Auto-detect bug/feature → CK fix/cook → GSD commit → CK test |
+| `/cgx:fix <task>` | Auto-detect bug/feature → systematic fix → commit → test |
 | `/cgx:debug <issue>` | CK debug → CK sequential-thinking → GSD debug → CK test |
 
 ### Quality

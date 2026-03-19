@@ -54,7 +54,7 @@ CGX_COMMANDS="$HOME/.claude/commands/cgx"
 CK_SKILLS="$HOME/.claude/skills"
 GSD_DIR="$HOME/.claude/get-shit-done"
 GSD_COMMANDS="$HOME/.claude/commands/gsd"
-CGX_VERSION="0.8.2"
+CGX_VERSION="0.9.0"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Uninstall
@@ -327,7 +327,7 @@ WORKFLOW
 
 QUICK
   /cgx:do <text>        Smart router
-  /cgx:quick <task>     Bug/feature auto-detect + commit + test
+  /cgx:fix <task>     Bug/feature auto-detect + commit + test
   /cgx:debug <issue>    Root cause analysis + fix
 
 QUALITY
@@ -399,7 +399,7 @@ Route by first match:
 | Unclear, vague, discuss         | /cgx:think --quick         |
 | Strategy, vision, evaluate      | /cgx:think                 |
 | New project, initialize         | /cgx:new                   |
-| Quick fix, small bug            | /cgx:quick --fix           |
+| Quick fix, small bug            | /cgx:fix --fix           |
 | Complex bug, investigate        | /cgx:debug                 |
 | Plan, research, approach        | /cgx:plan                  |
 | Build, implement                | /cgx:execute               |
@@ -408,7 +408,7 @@ Route by first match:
 | Documentation                   | /cgx:docs                  |
 | Progress, status                | /cgx:progress              |
 | Auto all phases                 | /cgx:autonomous            |
-| Small task                      | /cgx:quick                 |
+| Small task                      | /cgx:fix                 |
 If ambiguous: ask user with 2-3 options via AskUserQuestion.
 Display: `→ Routing to /cgx:<match>` then invoke.
 <format>Follow ~/.claude/cgx/output-format.md</format>
@@ -596,11 +596,11 @@ Build phase code, then quality gates. CGX stays in control throughout.
 </process>
 CMD_EOF
 
-# --- cgx:quick ---
-cat > "$CGX_COMMANDS/quick.md" << 'CMD_EOF'
+# --- cgx:fix ---
+cat > "$CGX_COMMANDS/fix.md" << 'CMD_EOF'
 ---
-name: cgx:quick
-description: Quick task — auto-detect bug/feature, implement + commit + test
+name: cgx:fix
+description: Fix bug or add feature — auto-detect, implement, commit, test
 argument-hint: "<task or bug description> [--fix] [--feature] [--no-test]"
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
 ---
@@ -668,7 +668,7 @@ git commit -m "<type>: <description>"
 ### Step 7: Report
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  CGX:quick — Complete
+  CGX:fix — Complete
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 | Item       | Details               |
 |------------|-----------------------|
@@ -999,7 +999,7 @@ Fixes applied: 5 | Remaining: 4 minor
 CMD_EOF
 
 # Remove old merged commands
-rm -f "$CGX_COMMANDS/fix.md" "$CGX_COMMANDS/research.md" "$CGX_COMMANDS/test.md" \
+rm -f "$CGX_COMMANDS/quick.md" "$CGX_COMMANDS/research.md" "$CGX_COMMANDS/test.md" \
       "$CGX_COMMANDS/simplify.md" "$CGX_COMMANDS/pause.md" "$CGX_COMMANDS/resume.md" \
       "$CGX_COMMANDS/clarify.md"
 
@@ -1142,7 +1142,7 @@ Match user intent → invoke the CGX command via `Skill(skill="cgx:<cmd>")`:
 | New project, start fresh, initialize                  | `Skill(skill="cgx:new")`        |
 | Plan, design, architect, research approach            | `Skill(skill="cgx:plan")`       |
 | Build, implement, execute a phase                     | `Skill(skill="cgx:execute")`    |
-| Quick fix, small bug, minor change                    | `Skill(skill="cgx:quick")`      |
+| Quick fix, small bug, minor change                    | `Skill(skill="cgx:fix")`      |
 | Complex bug, crash, investigation                     | `Skill(skill="cgx:debug")`      |
 | Review code, check quality, run tests                 | `Skill(skill="cgx:review")`     |
 | UI work, frontend, design                             | `Skill(skill="cgx:ui")`         |
