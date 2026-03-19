@@ -62,18 +62,29 @@ Then in Claude Code:
 |---------|----------|
 | `/cgx:do <text>` | Smart router — describe what you want |
 | `/cgx:quick <task>` | CK fix/cook → GSD quick → CK review |
+| `/cgx:fix <bug>` | CK fix → implement → GSD atomic commit → CK test |
 | `/cgx:debug <issue>` | CK debug → CK sequential-thinking → GSD debug → CK test |
 
 ### Quality
 | Command | Pipeline |
 |---------|----------|
 | `/cgx:review <phase>` | CK code-review → CK test → GSD verify-work |
+| `/cgx:test <phase>` | GSD add-tests → CK test → coverage analysis |
+| `/cgx:simplify [path]` | CK simplify → CK review → CK test → GSD commit |
 | `/cgx:ui <phase>` | GSD UI-SPEC → CK ui-ux-pro-max → build → GSD ui-review |
 
-### Tracking
+### Research & Docs
+| Command | Pipeline |
+|---------|----------|
+| `/cgx:research <topic>` | CK docs-seeker → CK researcher → CK brainstorm → report |
+| `/cgx:docs [action]` | CK docs → GSD project state → ./docs/ sync |
+
+### Session
 | Command | Pipeline |
 |---------|----------|
 | `/cgx:progress` | GSD progress + stats + CK kanban |
+| `/cgx:pause [notes]` | GSD pause-work → session summary |
+| `/cgx:resume` | GSD resume-work → git scan → next action |
 
 ## How It Works
 

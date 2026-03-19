@@ -54,7 +54,7 @@ CGX_COMMANDS="$HOME/.claude/commands/cgx"
 CK_SKILLS="$HOME/.claude/skills"
 GSD_DIR="$HOME/.claude/get-shit-done"
 GSD_COMMANDS="$HOME/.claude/commands/gsd"
-CGX_VERSION="0.1.0"
+CGX_VERSION="0.2.0"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Uninstall
@@ -266,14 +266,23 @@ WORKFLOW (use in order)
 QUICK ACCESS
   /cgx:do <text>        Smart router — describe what you want
   /cgx:quick <task>     Small task with quality gates
+  /cgx:fix <bug>        Quick bug fix + atomic commit + test
   /cgx:debug <issue>    Systematic debug with checkpoints
 
 QUALITY
   /cgx:review <phase>   Code review + goal verification
+  /cgx:test <phase>     Phase-aware testing + coverage
+  /cgx:simplify [path]  Code cleanup + review + verify
   /cgx:ui <phase>       UI phase with design intelligence
 
-TRACKING
+RESEARCH
+  /cgx:research <topic> Multi-source research + docs lookup
+  /cgx:docs [action]    Documentation sync + analysis
+
+SESSION
   /cgx:progress         Progress dashboard + kanban view
+  /cgx:pause [notes]    Save context for next session
+  /cgx:resume           Restore context + suggest next action
 
 HOW IT WORKS
   GSD provides: project state, roadmap, phases, wave execution, atomic commits
@@ -331,12 +340,19 @@ Route by first match:
 | Text describes... | Route |
 |-------------------|-------|
 | New project, setup, initialize | `/cgx:new` |
-| Bug, error, crash, broken | `/cgx:debug` |
-| Planning, research, approach | `/cgx:plan` |
+| Bug fix, quick error, broken | `/cgx:fix` |
+| Complex bug, crash, investigate | `/cgx:debug` |
+| Planning, approach, strategy | `/cgx:plan` |
+| Research, docs, library, how-to | `/cgx:research` |
 | Building, implementing, execute | `/cgx:execute` |
 | Review, quality, audit | `/cgx:review` |
+| Test, coverage, verify | `/cgx:test` |
+| Refactor, simplify, cleanup | `/cgx:simplify` |
 | UI, styling, frontend visuals | `/cgx:ui` |
+| Docs, documentation, update docs | `/cgx:docs` |
 | Progress, status | `/cgx:progress` |
+| Resume, continue, pick up | `/cgx:resume` |
+| Pause, stop, save context | `/cgx:pause` |
 | All phases auto | `/cgx:autonomous` |
 | Small specific task | `/cgx:quick` |
 If ambiguous: ask user with top 2-3 options.
@@ -533,7 +549,156 @@ GSD ui-phase (UI-SPEC) → CK ui-ux-pro-max (design) → cgx:execute → GSD ui-
 </process>
 CMD_EOF
 
-echo -e "  ${GREEN}✓${NC} 13 commands installed"
+# --- cgx:research ---
+cat > "$CGX_COMMANDS/research.md" << 'CMD_EOF'
+---
+name: cgx:research
+description: Deep research combining CK researcher + docs-seeker + GSD phase context
+argument-hint: "<topic or phase-number> [--deep] [--parallel]"
+allowed-tools: [Read, Write, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
+---
+<objective>
+Multi-source research: CK docs-seeker (latest docs) + CK researcher (web + analysis) + GSD phase context.
+Produces consolidated research report in plans/reports/.
+</objective>
+<context>$ARGUMENTS</context>
+<process>
+## 1. Context: If phase number given, read .planning/ phase context
+## 2. Docs lookup (CK): `Skill(skill="docs-seeker", args="$ARGUMENTS")` — latest library/framework docs
+## 3. Deep research (CK): Spawn 1-2 researcher agents for different aspects
+## 4. Brainstorm (CK): If --deep, `Skill(skill="brainstorm", args="$ARGUMENTS approaches")`
+## 5. Synthesize: Merge findings into single report at plans/reports/
+## 6. Report: Key findings, recommendations, trade-offs, links
+</process>
+CMD_EOF
+
+# --- cgx:test ---
+cat > "$CGX_COMMANDS/test.md" << 'CMD_EOF'
+---
+name: cgx:test
+description: Test with phase awareness — CK test + GSD add-tests + coverage analysis
+argument-hint: "<phase-number|'all'> [--generate] [--coverage] [--e2e]"
+allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
+---
+<objective>
+Phase-aware testing: generate tests from GSD UAT criteria + run via CK test + coverage report.
+</objective>
+<context>$ARGUMENTS</context>
+<process>
+## 1. Context: Read phase plan and UAT criteria from .planning/
+## 2. Generate (if --generate or no tests exist): `Skill(skill="gsd:add-tests", args="$ARGUMENTS")`
+## 3. Run tests (CK): `Skill(skill="test", args="Phase $ARGUMENTS")`
+## 4. Coverage: If --coverage, analyze test coverage for phase files
+## 5. E2E: If --e2e, `Skill(skill="web-testing", args="e2e Phase $ARGUMENTS")`
+## 6. Report: Pass/fail, coverage %, untested areas, recommendations
+</process>
+CMD_EOF
+
+# --- cgx:fix ---
+cat > "$CGX_COMMANDS/fix.md" << 'CMD_EOF'
+---
+name: cgx:fix
+description: Quick bug fix — CK fix analysis + GSD atomic commit + CK test verify
+argument-hint: "<bug description>"
+allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
+---
+<objective>
+Fast bug fix pipeline: CK fix (root cause) → implement → GSD quick (atomic commit) → CK test (verify).
+</objective>
+<context>$ARGUMENTS</context>
+<process>
+## 1. Analyze (CK): `Skill(skill="fix", args="$ARGUMENTS")`
+## 2. Implement the fix based on CK analysis
+## 3. Commit (GSD): `Skill(skill="gsd:quick", args="fix: $ARGUMENTS")`
+## 4. Verify (CK): `Skill(skill="test", args="regression for fix")`
+## 5. Report: Root cause, fix applied, test result
+</process>
+CMD_EOF
+
+# --- cgx:docs ---
+cat > "$CGX_COMMANDS/docs.md" << 'CMD_EOF'
+---
+name: cgx:docs
+description: Documentation management — CK docs analysis + GSD project docs sync
+argument-hint: "[init|update|sync|summary]"
+allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
+---
+<objective>
+Unified docs: CK docs (codebase analysis) + GSD project docs (.planning/) + ./docs/ sync.
+</objective>
+<context>$ARGUMENTS</context>
+<process>
+## 1. Detect action: init (first time), update (after changes), sync (align docs), summary (overview)
+## 2. Analyze (CK): `Skill(skill="docs", args="$ARGUMENTS")`
+## 3. GSD context: Read .planning/PROJECT.md, ROADMAP.md for project state
+## 4. Sync: Update ./docs/ files (architecture, roadmap, changelog) from current codebase + GSD state
+## 5. Report: Files updated, coverage gaps, stale docs flagged
+</process>
+CMD_EOF
+
+# --- cgx:simplify ---
+cat > "$CGX_COMMANDS/simplify.md" << 'CMD_EOF'
+---
+name: cgx:simplify
+description: Code cleanup — CK simplify + code-review + GSD verify no regressions
+argument-hint: "[file-path|phase-number]"
+allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, TodoWrite, AskUserQuestion]
+---
+<objective>
+Safe code cleanup: CK simplify (refactor) → CK code-review (verify quality) → CK test (no regressions) → GSD atomic commit.
+</objective>
+<context>$ARGUMENTS</context>
+<process>
+## 1. Scope: Identify files — specific path or recently changed files in phase
+## 2. Simplify (CK): `Skill(skill="simplify", args="$ARGUMENTS")`
+## 3. Review (CK): Spawn code-reviewer on simplified code
+## 4. Test (CK): `Skill(skill="test", args="regression check")`
+## 5. Commit (GSD): `Skill(skill="gsd:quick", args="refactor: simplify $ARGUMENTS")`
+## 6. Report: Lines reduced, complexity changes, test results
+</process>
+CMD_EOF
+
+# --- cgx:resume ---
+cat > "$CGX_COMMANDS/resume.md" << 'CMD_EOF'
+---
+name: cgx:resume
+description: Resume work — GSD context restore + CK codebase re-scan + next action
+argument-hint: ""
+allowed-tools: [Read, Glob, Grep, Bash, Task, AskUserQuestion]
+---
+<objective>
+Full context restoration: GSD resume-work + scan recent git changes + suggest next action.
+</objective>
+<process>
+## 1. Restore (GSD): `Skill(skill="gsd:resume-work")`
+## 2. Git scan: Check recent commits, uncommitted changes, branch status
+## 3. Health (GSD): `Skill(skill="gsd:health")` — verify planning directory
+## 4. Progress: `Skill(skill="gsd:progress")` — where we left off
+## 5. Suggest: Route to next action (plan, execute, fix, test)
+</process>
+CMD_EOF
+
+# --- cgx:pause ---
+cat > "$CGX_COMMANDS/pause.md" << 'CMD_EOF'
+---
+name: cgx:pause
+description: Pause work — save context for next session with GSD handoff + CK session report
+argument-hint: "[notes]"
+allowed-tools: [Read, Write, Glob, Grep, Bash, Task, AskUserQuestion]
+---
+<objective>
+Clean session pause: GSD pause-work (context handoff) + session summary + uncommitted work check.
+</objective>
+<context>$ARGUMENTS</context>
+<process>
+## 1. Check: Warn if uncommitted changes exist
+## 2. Pause (GSD): `Skill(skill="gsd:pause-work", args="$ARGUMENTS")`
+## 3. Summary: Git log since session start, files changed, phases touched
+## 4. Report: Handoff file location, resume instructions
+</process>
+CMD_EOF
+
+echo -e "  ${GREEN}✓${NC} 20 commands installed"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Step 6: Write config
@@ -579,7 +744,7 @@ echo ""
 echo -e "  Mode: ${BOLD}${MODE}${NC}"
 echo -e "  CK:   $([ "$CK_FOUND" = true ] && echo -e "${GREEN}✓ ${CK_SKILL_COUNT} skills${NC}" || echo -e "${YELLOW}✗ Missing${NC}")"
 echo -e "  GSD:  $([ "$GSD_FOUND" = true ] && echo -e "${GREEN}✓ v${GSD_VERSION}${NC}" || echo -e "${YELLOW}✗ Missing${NC}")"
-echo -e "  CGX:  ${GREEN}✓ 13 commands${NC}"
+echo -e "  CGX:  ${GREEN}✓ 20 commands${NC}"
 echo ""
 echo -e "  ${BOLD}Usage:${NC}"
 echo -e "    /cgx:help       — Show all commands"
